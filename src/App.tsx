@@ -3,6 +3,7 @@ import './App.css';
 import Message from './Message';
 
 function App() {
+  //I guess we have to store a bunch of messages arrays in localStorage or something
   const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'system' }[]>([]);
   const [inputText, setInputText] = useState('');
 
