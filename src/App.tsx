@@ -42,7 +42,7 @@ function App() {
   return (
     <div className="App">
       <div className="title">
-        Good Title LLM
+        Studio Gem LLM
       </div>
       <div className="message-list">
         {messages.map((msg, index) => (
