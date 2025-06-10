@@ -30,6 +30,14 @@
   flex: 1;
   resize: none;
   padding: 10px;
+  font-family: 'Verdana';
+}
+
+.chat-input-bar textarea::placeholder {
+  font-family: 'Verdana';
+  font-size: 14px;
+  font-style: italic;
+  color: #999;
 }
 
 .chat-input-bar button {
@@ -40,7 +48,53 @@
   justify-content: center;
 }
 
+.message-list {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
 
+.title{
+  background-color: #FFFFFF;
+  color: #000000;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  width: 40%;
+  margin: 0 auto;
+  border-left: 2px solid #343a40;
+  border-right: 2px solid #343a40;
+  border-bottom: 2px solid #343a40;
+  border-top: none;
+  font-family: 'Verdana';
+}
+
+.chat-message.user{
+  color: #FFFFFF;
+  background-color: hsl(216, 98%, 52%);
+  padding: 10px 15px;
+  margin: 5px 10px;
+  border-radius: 18px;
+  max-width: 30%;
+  word-wrap: break-word;
+  align-self: flex-end;
+  font-size: 16px;
+  text-align: left;
+  font-family: 'Verdana';
+}
+
+.chat-message.system{
+  color: #000000;
+  background-color: #FFA500;
+  padding: 10px 15px;
+  margin: 5px 10px;
+  border-radius: 18px;
+  max-width: 30%;
+  word-wrap: break-word;
+  align-self: flex-start;
+  font-size: 16px;
+  text-align: left;
+  font-family: 'Verdana';
+}
 
 .App-header {
   background-color: #282c34;
