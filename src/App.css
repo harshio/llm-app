@@ -13,6 +13,35 @@
   }
 }
 
+.chat-input-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  gap: 0.5rem;
+  padding: 10px;
+  background-color: white;
+  border-top: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.chat-input-bar textarea {
+  flex: 1;
+  resize: none;
+  padding: 10px;
+}
+
+.chat-input-bar button {
+  flex-shrink: 0;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
