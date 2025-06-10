@@ -11,6 +11,7 @@ function App() {
       setMessages([
         ...messages,
         { text: inputText, sender: 'user' },
+        //fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=GEMINI_API_KEY", {method: 'POST', headers: {'Content-Type': 'application/json'}, body: {inputText}})
         { text: '💡 Auto-reply: Thanks for your message!', sender: 'system' } //We have to replace the hardcoded string with a part of our response object. Fetch is asynchronous, so I have to figure out how to work with that.
         //I'm pretty sure the API documentation is saying that I have to do a POST request and the JSON object has to contain the user's input string. It will then return something I can use.
       ]);
