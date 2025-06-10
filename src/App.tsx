@@ -12,20 +12,21 @@ function App() {
         ...messages,
         { text: inputText, sender: 'user' },
         /*fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=YOUR_API_KEY", {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    contents: [
-      {
-        parts: [
-          { text: inputText }
-        ]
-      }
-    ]
-  })
-})*/
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [{ text: inputText }]
+                }
+              ]
+            })
+          })
+            .then(res=>res.json()) we need to convert our response object into a JSON object
+            .then(data => {logic with data.candidates?.[0]?.content?.parts?.[0]?.text;})
+            .catch(error => {console.error("Damn boy");});*/
         { text: '💡 Auto-reply: Thanks for your message!', sender: 'system' } //We have to replace the hardcoded string with a part of our response object. Fetch is asynchronous, so I have to figure out how to work with that.
         //I'm pretty sure the API documentation is saying that I have to do a POST request and that the JSON object has to contain the user's input string. It will then return something I can use.
       ]);
