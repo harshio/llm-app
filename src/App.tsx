@@ -45,6 +45,10 @@ function App() {
   };
 
   const handleNew = () => {
+    //We'll put another fetch call here: It will be a POST request, and it'll contain our old message
+    //before we get to the setMessages([]) line
+    //Before we can do that though, we'll have to implement it in our backend. It should have a body of
+    //messages. Later on, we should attempt to better format messages.
     setMessages([]);
   };
   
