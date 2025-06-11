@@ -25,28 +25,21 @@ function App() {
     if (inputText.trim()) {
       const userMessage = { text: inputText, sender: 'user' as const};
       setMessages(prev => [...prev, userMessage]);
-      const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
-      fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: "user",
-                  parts: [{ text: inputText }]
-                }
-              ]
-            })
-          })
-            .then(res=>res.json()) //we need to convert our response object into a JSON object
-            .then(data => {
-            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            const systemMessage = { text: reply, sender: 'system' as const};
-            setMessages(prev => [...prev, systemMessage]);
-          })
-            .catch(error => {console.error("We could not find a response to the user's question.");});
+      fetch("http://localhost:8000/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prompt: inputText })
+      })
+        .then(res => res.json())
+        .then(data => {
+          const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          const systemMessage = { text: reply, sender: 'system' as const };
+          setMessages(prev => [...prev, systemMessage]);
+        })
+        .catch(err => console.error("Error calling FastAPI:", err));
+      
       setInputText('');
     }
   };
