@@ -49,7 +49,15 @@ function App() {
     //before we get to the setMessages([]) line
     //Before we can do that though, we'll have to implement it in our backend. It should have a body of
     //messages. Later on, we should attempt to better format messages.
-    setMessages([]);
+    fetch("http://localhost:8000/api/chats", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(messages)  // ✅ directly pass the array
+    })
+    .then(() => setMessages([]))
+    .catch(err => console.error("Oops"));
   };
   
 
