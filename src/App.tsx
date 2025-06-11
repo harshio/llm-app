@@ -10,10 +10,19 @@ function App() {
     // ✅ Load messages from localStorage on first render
     useEffect(() => {
       const savedMessages = localStorage.getItem('messages');
+      console.log("On mount, savedMessages =", savedMessages);
       if (savedMessages) {
-        setMessages(JSON.parse(savedMessages));
+        try {
+          const parsed = JSON.parse(savedMessages);
+          if (Array.isArray(parsed)) {
+            setMessages(parsed);
+          }
+        } catch (e) {
+          console.error("Failed to parse localStorage messages", e);
+        }
       }
     }, []);
+    
   
     // ✅ Save to localStorage whenever messages change
     useEffect(() => {
