@@ -61,9 +61,9 @@
   padding-bottom: 5px;
   width: 40%;
   margin: 0 auto;
-  border-left: 2px solid #343a40;
-  border-right: 2px solid #343a40;
-  border-bottom: 2px solid #343a40;
+  border-left: 2px solid #000000;
+  border-right: 2px solid #000000;
+  border-bottom: 2px solid #000000;
   border-top: none;
   font-family: 'Arial Black';
 }
@@ -80,6 +80,16 @@
   font-size: 16px;
   text-align: left;
   font-family: 'Arial Black';
+}
+
+.newChat{
+  border-top: none;
+  border-left: 2px solid #000000;
+  border-right: 2px solid #000000;
+  border-bottom: 2px solid #000000;
+  font-family: 'Arial Black';
+  color: #FFFFFF;
+  background-color: #000000;
 }
 
 .chat-message.system{

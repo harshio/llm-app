@@ -52,7 +52,7 @@ function App() {
             const systemMessage = { text: reply, sender: 'system' as const};
             setMessages(prev => [...prev, systemMessage]);
           })
-            .catch(error => {console.error("Damn boy");});
+            .catch(error => {console.error("We could not find a response to the user's question.");});
       setInputText('');
     }
   };
@@ -63,6 +63,7 @@ function App() {
       <div className="title">
         Studio Gem LLM
       </div>
+      <button className = "newChat" onClick={() => setMessages([])}>New Chat</button>
       <div className="message-list">
         {messages.map((msg, index) => (
           <Message key={index} text={msg.text} sender={msg.sender}/>
