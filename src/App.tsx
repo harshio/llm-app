@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import Message from './Message';
 
@@ -7,12 +7,23 @@ function App() {
   const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'system' }[]>([]);
   const [inputText, setInputText] = useState('');
 
+    // ✅ Load messages from localStorage on first render
+    useEffect(() => {
+      const savedMessages = localStorage.getItem('messages');
+      if (savedMessages) {
+        setMessages(JSON.parse(savedMessages));
+      }
+    }, []);
+  
+    // ✅ Save to localStorage whenever messages change
+    useEffect(() => {
+      localStorage.setItem('messages', JSON.stringify(messages));
+    }, [messages]);
+
   const handleSend = () => {
     if (inputText.trim()) {
-      setMessages([
-        ...messages,
-        { text: inputText, sender: 'user' },
-      ]);
+      const userMessage = { text: inputText, sender: 'user' as const};
+      setMessages(prev => [...prev, userMessage]);
       fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBwLWMppNZktkQgPFQdxyXh5u6kzjFrWgk", {
             method: 'POST',
             headers: {
@@ -29,11 +40,9 @@ function App() {
             .then(res=>res.json()) //we need to convert our response object into a JSON object
             .then(data => {
             const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            setMessages([
-              ...messages,
-              { text: inputText, sender: 'user' },
-              { text: reply, sender: 'system' }
-            ]);})
+            const systemMessage = { text: reply, sender: 'system' as const};
+            setMessages(prev => [...prev, systemMessage]);
+          })
             .catch(error => {console.error("Damn boy");});
       setInputText('');
     }
