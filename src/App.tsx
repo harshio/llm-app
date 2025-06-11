@@ -62,7 +62,6 @@ function App() {
         Studio Gem LLM
       </div>
       <button className = "newChat" onClick={handleNew}>New Chat</button>
-      <button onClick={() => localStorage.clear()}>For testing</button>
       <select id="chatHistory" className="custom-dropdown">
         <option value="chat1">Chat 1</option>
         <option value="chat2">Chat 2</option>
