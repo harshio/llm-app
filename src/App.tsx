@@ -6,6 +6,7 @@ function App() {
   //I guess we have to store a bunch of messages arrays in localStorage or something
   const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'system' }[]>([]);
   const [inputText, setInputText] = useState('');
+  const [counter, setCounter] = useState(0);
 
     // ✅ Load messages from localStorage on first render
     useEffect(() => {
@@ -22,18 +23,23 @@ function App() {
         }
       }
     }, []);
+
+    //We're very close. Now we need to find a way of saving to localStorages that doesn't override old messages arrays.
+    //Once we do all this, we can extend to placing this in a SQLite database or something.
     
   
     // ✅ Save to localStorage whenever messages change
     useEffect(() => {
       localStorage.setItem('messages', JSON.stringify(messages));
-    }, [messages]);
+      localStorage.setItem('counter', JSON.stringify(counter));
+    }, [messages, counter]);
 
   const handleSend = () => {
     if (inputText.trim()) {
       const userMessage = { text: inputText, sender: 'user' as const};
       setMessages(prev => [...prev, userMessage]);
-      fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBwLWMppNZktkQgPFQdxyXh5u6kzjFrWgk", {
+      const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+      fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -41,6 +47,7 @@ function App() {
             body: JSON.stringify({
               contents: [
                 {
+                  role: "user",
                   parts: [{ text: inputText }]
                 }
               ]
@@ -56,6 +63,23 @@ function App() {
       setInputText('');
     }
   };
+
+  const handleNew = () => {
+    //Before we do setMessages([]), we need to place the old value of message in localStorage
+    //That way, we'll able to use it later in a history tab
+    const saved = localStorage.getItem('counter');
+    let counterValue = saved !== null ? parseInt(saved, 10) : 0;
+    //If there actually is a set of messages to save before going to the new chat, then we'll save them first
+    if(messages && messages.length > 0){
+      counterValue++;
+      localStorage.setItem('old' + counterValue, JSON.stringify(messages));
+      setCounter(counterValue); //this also triggers the useEffect, since counter is a dependency in it. It should save the new value of counter in localStorage
+      //asynchronous, untrustworthy, put it last.
+    }
+    //Regardless of whether or not there actually is a set of messages to save or not, we can still just make a new chat
+    //It doesn't really matter if we put setMessages([]) in the if-statement or after it
+    setMessages([]);
+  };
   
 
   return (
@@ -63,7 +87,14 @@ function App() {
       <div className="title">
         Studio Gem LLM
       </div>
-      <button className = "newChat" onClick={() => setMessages([])}>New Chat</button>
+      <button className = "newChat" onClick={handleNew}>New Chat</button>
+      <button onClick={() => localStorage.clear()}>For testing</button>
+      <select id="chatHistory" className="custom-dropdown">
+        <option value="chat1">Chat 1</option>
+        <option value="chat2">Chat 2</option>
+        <option value="chat3">Chat 3</option>
+      </select>
+
       <div className="message-list">
         {messages.map((msg, index) => (
           <Message key={index} text={msg.text} sender={msg.sender}/>
