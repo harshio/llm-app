@@ -36,6 +36,7 @@ function App() {
       })
         .then(res => res.json())
         .then(data => {
+          console.log("RECEIVED FROM API:", JSON.stringify(data, null, 2));
           const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "[No reply]";
           const systemMessage = { text: reply, sender: 'system' as const };
           setMessages(prev => [...prev, systemMessage]);
@@ -87,7 +88,7 @@ function App() {
         <option value="" disabled>Select a chat</option>
         {chatIds.map(chatId => (
           <option key={chatId} value={chatId}>
-            {chatId}
+            Chat #{chatId}
           </option>
         ))}
       </select>
