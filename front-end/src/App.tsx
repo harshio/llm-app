@@ -32,13 +32,20 @@ function App() {
       const userMessage = { text: inputText, sender: 'user' as const };
       setMessages(prev => [...prev, userMessage]);
       setIsDirty(true); // Ensure chat gets saved later
+      const recentMessages = messages.slice(-20);  // ⬅️ get last 20 messages
+      const fullPrompt = recentMessages
+        .map(m => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
+        .join('\n');
+
+      const finalInput = `${fullPrompt}\nUser: ${inputText}`;
+
   
       fetch("http://localhost:8000/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ prompt: inputText })
+        body: JSON.stringify({ prompt: finalInput })
       })
         .then(res => res.json())
         .then(data => {
