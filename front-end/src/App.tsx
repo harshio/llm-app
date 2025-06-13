@@ -21,6 +21,14 @@ function App() {
     if(savedMessages){
       setMessages(JSON.parse(savedMessages));
     }
+    const savedCurrentChatId = localStorage.getItem('currentChatId');
+    if(savedCurrentChatId){
+      setCurrentChatId(JSON.parse(savedCurrentChatId));
+    }
+    const saveDropdownValue = localStorage.getItem('selectedDropdownValue');
+    if(saveDropdownValue){
+      setSelectedDropdownValue(JSON.parse(saveDropdownValue));
+    }
     fetch("http://localhost:8000/api/chats/grouped")
       .then(res => res.json())
       .then(data => {
@@ -32,6 +40,8 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem('messages', JSON.stringify(messages));
+    localStorage.setItem('currentChatId', JSON.stringify(currentChatId));
+    localStorage.setItem('selectedDropdownValue', JSON.stringify(selectedDropdownValue));
   }, [messages]);
 
   // Send a message and get system reply
@@ -133,6 +143,7 @@ function App() {
 
       <select className="custom-dropdown" onChange={ (e) => {
         setSelectedDropdownValue(e.target.value);
+        localStorage.setItem('selectedDropdownValue', JSON.stringify(selectedDropdownValue));
         handleSelect(e);
       }} 
         value={selectedDropdownValue}>
