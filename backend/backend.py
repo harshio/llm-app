@@ -1,12 +1,12 @@
 # backend.py
 import random
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, APIRouter, Body
 from fastapi.middleware.cors import CORSMiddleware
 import requests
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from typing import List, Literal
+from typing import List, Literal, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from models import Message as DBMessage, SessionLocal
 
@@ -66,13 +66,21 @@ async def generate_content(request: Request):
 
 
 @app.post("/api/chats")
-def save_chat(messages: List[MessageIn], db: Session = Depends(get_db)):
-   chat_id = random.randint(100000, 999999)
-   for msg in messages:
-       db_msg = DBMessage(text=msg.text, sender=msg.sender, chat_id=chat_id)
-       db.add(db_msg)
-   db.commit()
-   return {"status": "saved", "chat_id": chat_id, "count": len(messages)}
+def save_chat(messages: List[MessageIn], chat_id: Optional[int] = Body(0), db: Session = Depends(get_db)):
+    if not messages:
+        return {"error": "No messages provided"}, 400
+
+    # Generate a new ID if chat_id is 0 or missing
+    if chat_id == 0:
+        chat_id = random.randint(100000, 999999)
+
+    for msg in messages:
+        db_msg = DBMessage(text=msg.text, sender=msg.sender, chat_id=chat_id)
+        db.add(db_msg)
+    
+    db.commit()
+    return {"status": "saved", "chat_id": chat_id, "count": len(messages)}
+
 
 
 @app.get("/api/chats")
