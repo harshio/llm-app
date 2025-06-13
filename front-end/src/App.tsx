@@ -12,7 +12,7 @@ function App() {
   const [isDirty, setIsDirty] = useState(true);
   const [currentChatId, setCurrentChatId] = useState<string>('0');
   const [selectedDropdownValue, setSelectedDropdownValue] = useState('');
-
+  const [lastSavedMessageCount, setLastSavedMessageCount] = useState(0);
 
 
   // Load chat IDs and data on first render
@@ -56,12 +56,13 @@ function App() {
 
   // Archive current messages as a new chat
   const handleNew = () => {
+    const unsavedMessages = messages.slice(lastSavedMessageCount);
     if (isDirty && messages.length > 0) {
       const isNewChat = currentChatId === '0';
   
       const payload = isNewChat
-        ? { messages }
-        : { chat_id: currentChatId, messages };
+        ? { messages: unsavedMessages }
+        : { chat_id: currentChatId, messages: unsavedMessages };
   
       fetch("http://localhost:8000/api/chats", {
         method: "POST",
@@ -75,6 +76,7 @@ function App() {
           setMessages([]);
           setCurrentChatId('0');
           setIsDirty(false);
+          setLastSavedMessageCount(0);
           return fetch("http://localhost:8000/api/chats/grouped");
         })
         .then(res => res.json())
@@ -97,10 +99,13 @@ function App() {
     const chatId = e.target.value;
     if (chats[chatId]) {
       setMessages(chats[chatId]);
+      setLastSavedMessageCount(chats[chatId].length);
       setCurrentChatId(chatId);
       setIsDirty(false);
     } else {
       console.error("Chat ID not found in memory:", chatId);
+      setMessages([]);
+      setLastSavedMessageCount(0);
     }
   };
 
