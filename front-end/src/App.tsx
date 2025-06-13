@@ -17,6 +17,10 @@ function App() {
 
   // Load chat IDs and data on first render
   useEffect(() => {
+    const savedMessages = localStorage.getItem('messages');
+    if(savedMessages){
+      setMessages(JSON.parse(savedMessages));
+    }
     fetch("http://localhost:8000/api/chats/grouped")
       .then(res => res.json())
       .then(data => {
@@ -25,6 +29,10 @@ function App() {
       })
       .catch(err => console.error("Failed to load chat IDs:", err));
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('messages', JSON.stringify(messages));
+  }, [messages]);
 
   // Send a message and get system reply
   const handleSend = () => {
@@ -37,7 +45,7 @@ function App() {
         .map(m => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
         .join('\n');
 
-      const finalInput = `${fullPrompt}\nUser: ${inputText}`;
+      const finalInput = `${fullPrompt}\nUser: ${inputText}, also say like 3-4 sentences in response.`;
 
   
       fetch("http://localhost:8000/api/generate", {
@@ -121,6 +129,7 @@ function App() {
       <div className="title">Studio Gem LLM</div>
 
       <button className="newChat" onClick={handleNew}>New Chat</button>
+      <button className="top-right" onClick={()=>{localStorage.removeItem('messages');}}>Clear localStorage</button>
 
       <select className="custom-dropdown" onChange={ (e) => {
         setSelectedDropdownValue(e.target.value);
