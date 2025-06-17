@@ -129,6 +129,22 @@ body {
   padding: 10px;
 }
 
+.welcomeMsg {
+  position: absolute;
+  top: 40%; /* slightly above the center of screen */
+  left: 50%;
+  transform: translate(-120%, -50%);
+  font-family: 'Arial';
+  font-size: 18px;
+  color: #666;
+  background-color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+
 .title{
   background-color: #FFFFFF;
   font-weight: bold;

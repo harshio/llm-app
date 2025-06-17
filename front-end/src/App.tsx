@@ -216,6 +216,7 @@ function App() {
       </div>
 
       <div className={`App ${messages.length === 0 ? 'centered-input' : 'bottom-input'}`}>
+        {messages.length === 0 && <div className="welcomeMsg">Hello, user!</div>}
         <div className="message-list">
           {messages.map((msg, index) => (
             <Message key={index} text={msg.text} sender={msg.sender} />
