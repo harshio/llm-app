@@ -133,7 +133,7 @@ body {
   position: absolute;
   top: 40%; /* slightly above the center of screen */
   left: 50%;
-  transform: translate(-120%, -50%);
+  transform: translate(-85%, -50%);
   font-family: 'Arial';
   font-size: 18px;
   color: #666;
