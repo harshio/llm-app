@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Message from './Message';
 
@@ -12,6 +12,7 @@ function App() {
   const [selectedDropdownValue, setSelectedDropdownValue] = useState('');
   const [lastSavedMessageCount, setLastSavedMessageCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedMessages = localStorage.getItem('messages');
@@ -36,6 +37,12 @@ function App() {
     localStorage.setItem('messages', JSON.stringify(messages));
     localStorage.setItem('currentChatId', JSON.stringify(currentChatId));
     localStorage.setItem('selectedDropdownValue', JSON.stringify(selectedDropdownValue));
+  }, [messages]);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   const saveCurrentChat = async (): Promise<string | null> => {
@@ -186,9 +193,6 @@ function App() {
     <div className="layout">
       <div className="header-container">
         <div className="title">Studio Gem LLM</div>
-        <button className="top-right" onClick={() => localStorage.removeItem('messages')}>
-          Clear localStorage
-        </button>
       </div>
 
       <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -221,6 +225,7 @@ function App() {
           {messages.map((msg, index) => (
             <Message key={index} text={msg.text} sender={msg.sender} />
           ))}
+          <div ref={messagesEndRef} />
         </div>
 
         <div className={`chat-input-bar ${messages.length === 0 ? 'centered' : 'bottom'}`}>
