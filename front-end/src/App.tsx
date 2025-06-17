@@ -38,24 +38,37 @@ function App() {
     localStorage.setItem('selectedDropdownValue', JSON.stringify(selectedDropdownValue));
   }, [messages]);
 
-  const saveCurrentChat = async () => {
+  const saveCurrentChat = async (): Promise<string | null> => {
     const unsavedMessages = messages.slice(lastSavedMessageCount);
     if (isDirty && messages.length > 0) {
       const isNewChat = currentChatId === '0';
       const payload = isNewChat
         ? { messages: unsavedMessages }
         : { chat_id: currentChatId, messages: unsavedMessages };
-
-      await fetch("http://localhost:8000/api/chats", {
+  
+      const res = await fetch("http://localhost:8000/api/chats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-
+  
+      const data = await res.json();
+  
+      const newChatId = data.chat_id?.toString() ?? null;
+  
+      if (isNewChat && newChatId) {
+        setCurrentChatId(newChatId);
+      }
+  
       setIsDirty(false);
       setLastSavedMessageCount(messages.length);
+  
+      return newChatId;
     }
+  
+    return null;
   };
+  
 
   const loadChatById = async (chatId: string) => {
     if (chats[chatId]) {
@@ -76,13 +89,58 @@ function App() {
     setSelectedDropdownValue('');
   };
 
-  const handleSend = () => {
+  const saveCurrentChatWithMessages = async (messageList: typeof messages): Promise<string | null> => {
+    const unsavedMessages = messageList.slice(lastSavedMessageCount);
+    if (isDirty && messageList.length > 0) {
+      const isNewChat = currentChatId === '0';
+      const payload = isNewChat
+        ? { messages: unsavedMessages }
+        : { chat_id: currentChatId, messages: unsavedMessages };
+  
+      const res = await fetch("http://localhost:8000/api/chats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+  
+      const data = await res.json();
+      const newChatId = data.chat_id?.toString() ?? null;
+  
+      if (isNewChat && newChatId) {
+        setCurrentChatId(newChatId);
+      }
+  
+      setIsDirty(false);
+      setLastSavedMessageCount(messageList.length);
+  
+      return newChatId;
+    }
+  
+    return null;
+  };
+  
+
+  const handleSend = async () => {
     if (inputText.trim()) {
       const userMessage = { text: inputText, sender: 'user' as const };
-      setMessages(prev => [...prev, userMessage]);
-      setIsDirty(true);
 
-      const recentMessages = messages.slice(-20);
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
+      setIsDirty(true);
+      setInputText('');
+
+
+      if (currentChatId === '0' && messages.length === 0) {
+        const newChatId = await saveCurrentChatWithMessages(updatedMessages);
+        if(newChatId){
+          const res = await fetch("http://localhost:8000/api/chats/grouped");
+          const data = await res.json();
+          setChats(data);
+          setChatIds(Object.keys(data));
+        }
+      }
+
+      const recentMessages = updatedMessages.slice(-20);
       const fullPrompt = recentMessages
         .map(m => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
         .join('\n');
@@ -145,9 +203,11 @@ function App() {
             key={chatId}
             className={`sidebar-chat ${currentChatId === chatId ? 'active' : ''}`}
             onClick={async () => {
-              setSelectedDropdownValue(chatId);
-              await saveCurrentChat();
-              await loadChatById(chatId);
+              if (chatId !== currentChatId) {
+                setSelectedDropdownValue(chatId);
+                await saveCurrentChat();
+                await loadChatById(chatId);
+              }
             }}
           >
             Chat #{chatId}
