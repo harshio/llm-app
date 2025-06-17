@@ -105,11 +105,11 @@ body {
   flex: 1;
   resize: none;
   padding: 10px;
-  font-family: 'Arial Black';
+  font-family: 'Arial';
 }
 
 .chat-input-bar textarea::placeholder {
-  font-family: 'Arial Black';
+  font-family: 'Arial';
   font-size: 14px;
   font-style: italic;
   color: #999;
@@ -131,6 +131,7 @@ body {
 
 .title{
   background-color: #FFFFFF;
+  font-weight: bold;
   color: #000000;
   padding-top: 5px;
   padding-bottom: 5px;
@@ -140,7 +141,8 @@ body {
   border-right: 2px solid #000000;
   border-bottom: 2px solid #000000;
   border-top: none;
-  font-family: 'Arial Black';
+  border-radius: 5px;
+  font-family: 'Arial';
   display: flex;
   align-items: center;     /* vertical centering */
   justify-content: center; /* horizontal centering */
@@ -159,23 +161,23 @@ body {
   align-self: flex-end;
   font-size: 16px;
   text-align: left;
-  font-family: 'Arial Black';
+  font-family: 'Arial';
 }
 
 .newChat{
   width: fit-content;        /* only as wide as content */
   margin: 10px auto; 
   border-top: none;
-  border-left: 2px solid #000000;
-  border-right: 2px solid #000000;
+  border-left: none;
+  border-right: none;
   border-bottom: 2px solid #000000;
-  font-family: 'Arial Black';
-  color: #FFFFFF;
-  background-color: #000000;
+  font-family: 'Arial';
+  color: #000000;
+  background-color: #f5f5f5;
 }
 
 .custom-dropdown{
-  font-family: 'Arial Black';
+  font-family: 'Arial';
   border-top: 2px solid #000000;
   border-left: 2px solid #000000;
   border-right: 2px solid #000000;
@@ -197,7 +199,7 @@ body {
   align-self: flex-start;
   font-size: 16px;
   text-align: left;
-  font-family: 'Arial Black';
+  font-family: 'Arial';
 }
 
 .App-header {
@@ -278,7 +280,7 @@ body {
 }
 
 .sidebar-chat.active {
-  background-color: #d0d0ff;
+  background-color: #ffff00;
 }
 
 
