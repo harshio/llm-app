@@ -13,6 +13,7 @@ function App() {
   const [currentChatId, setCurrentChatId] = useState<string>('0');
   const [selectedDropdownValue, setSelectedDropdownValue] = useState('');
   const [lastSavedMessageCount, setLastSavedMessageCount] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
 
   // Load chat IDs and data on first render
@@ -135,44 +136,54 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <div className="title">Studio Gem LLM</div>
+    <div className="layout">
+      <div className="header-container">
+        <div className="title">Studio Gem LLM</div>
 
-      <button className="newChat" onClick={handleNew}>New Chat</button>
-      <button className="top-right" onClick={()=>{localStorage.removeItem('messages');}}>Clear localStorage</button>
-
-      <select className="custom-dropdown" onChange={ (e) => {
-        setSelectedDropdownValue(e.target.value);
-        localStorage.setItem('selectedDropdownValue', JSON.stringify(selectedDropdownValue));
-        handleSelect(e);
-      }} 
-        value={selectedDropdownValue}>
-        <option value="" disabled>Select a chat</option>
+        <button className="newChat" onClick={handleNew}>New Chat</button>
+        <button className="top-right" onClick={()=>{localStorage.removeItem('messages');}}>Clear localStorage</button>
+      </div>
+      <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
+        &#9776; {/* Unicode for hamburger ☰ */}
+      </button>
+      <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+        <div className="sidebar-title">Chats</div>
         {chatIds.map(chatId => (
-          <option key={chatId} value={chatId}>
+          <div
+            key={chatId}
+            className={`sidebar-chat ${currentChatId === chatId ? 'active' : ''}`}
+            onClick={() => {
+              setSelectedDropdownValue(chatId);
+              handleSelect({ target: { value: chatId } } as React.ChangeEvent<HTMLSelectElement>);
+            }}
+          >
             Chat #{chatId}
-          </option>
-        ))}
-      </select>
-
-      <div className="message-list">
-        {messages.map((msg, index) => (
-          <Message key={index} text={msg.text} sender={msg.sender} />
+          </div>
         ))}
       </div>
 
-      <div className="chat-input-bar">
-        <textarea
-          value={inputText}
-          onChange={(e) => {
-            setInputText(e.target.value);
-            setIsDirty(true);  // 👈 Mark the chat as modified
-          }}          
-          placeholder="What is the weather?"
-        ></textarea>
-        <button type="submit" className="btn btn-primary" onClick={handleSend}>
-          <i className="bi bi-send"></i>
-        </button>
+      <div className={`App ${messages.length === 0 ? 'centered-input' : 'bottom-input'}`}>
+
+        <div className="message-list">
+          {messages.map((msg, index) => (
+            <Message key={index} text={msg.text} sender={msg.sender} />
+          ))}
+        </div>
+        
+
+        <div className={`chat-input-bar ${messages.length === 0 ? 'centered' : 'bottom'}`}>
+          <textarea
+            value={inputText}
+            onChange={(e) => {
+              setInputText(e.target.value);
+              setIsDirty(true);  // 👈 Mark the chat as modified
+            }}          
+            placeholder="What is the weather?"
+          ></textarea>
+          <button type="submit" className="btn btn-primary" onClick={handleSend}>
+            <i className="bi bi-send"></i>
+          </button>
+        </div>
       </div>
     </div>
   );
