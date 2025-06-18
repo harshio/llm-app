@@ -24,6 +24,9 @@ function App() {
     const saveDropdownValue = localStorage.getItem('selectedDropdownValue');
     if (saveDropdownValue) setSelectedDropdownValue(JSON.parse(saveDropdownValue));
 
+    const saveLastMessageCount = localStorage.getItem('lastSavedMessageCount');
+    if (saveLastMessageCount) setLastSavedMessageCount(JSON.parse(saveLastMessageCount));
+
     fetch("http://localhost:8000/api/chats/grouped")
       .then(res => res.json())
       .then(data => {
@@ -94,6 +97,12 @@ function App() {
   
     return null;
   };
+
+  useEffect(() => {
+    console.log("lastSavedMessageCount updated:", lastSavedMessageCount);
+    localStorage.setItem('lastSavedMessageCount', JSON.stringify(lastSavedMessageCount));
+  }, [lastSavedMessageCount]);
+  
   
 
   const handleSend = async () => {
@@ -107,6 +116,7 @@ function App() {
 
 
       if (currentChatId === '0' && messages.length === 0) {
+        console.log(updatedMessages);
         const newChatId = await saveCurrentChatWithMessages(updatedMessages);
         if(newChatId){
           const res = await fetch("http://localhost:8000/api/chats/grouped");
@@ -131,7 +141,11 @@ function App() {
         .then(data => {
           const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "[No reply]";
           const systemMessage = { text: reply, sender: 'system' as const };
-          setMessages(prev => [...prev, systemMessage]);
+          setMessages(prev => {
+            const newMessages = [...prev, systemMessage];
+            console.log(newMessages.map(m => `${m.sender}: ${m.text}`));
+            return newMessages;
+          });
         })
         .catch(err => console.error("Error calling FastAPI:", err));
 
@@ -143,7 +157,6 @@ function App() {
     await saveCurrentChatWithMessages(messages);
     setMessages([]);
     setCurrentChatId('0');
-    setLastSavedMessageCount(0);
     setSelectedDropdownValue('');
 
     const res = await fetch("http://localhost:8000/api/chats/grouped");
