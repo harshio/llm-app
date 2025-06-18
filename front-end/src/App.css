@@ -286,11 +286,12 @@ body {
 }
 
 .sidebar-chat:hover {
-  background-color: #e0e0e0;
+  background-color: #00ffe0;
 }
 
 .sidebar-chat.active {
-  background-color: #ffff00;
+  background-color: #ff0066;
+  color: #ffffff;
 }
 
 

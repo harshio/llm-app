@@ -44,37 +44,6 @@ function App() {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
-
-  const saveCurrentChat = async (): Promise<string | null> => {
-    const unsavedMessages = messages.slice(lastSavedMessageCount);
-    if (isDirty && messages.length > 0) {
-      const isNewChat = currentChatId === '0';
-      const payload = isNewChat
-        ? { messages: unsavedMessages }
-        : { chat_id: currentChatId, messages: unsavedMessages };
-  
-      const res = await fetch("http://localhost:8000/api/chats", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-  
-      const data = await res.json();
-  
-      const newChatId = data.chat_id?.toString() ?? null;
-  
-      if (isNewChat && newChatId) {
-        setCurrentChatId(newChatId);
-      }
-  
-      setIsDirty(false);
-      setLastSavedMessageCount(messages.length);
-  
-      return newChatId;
-    }
-  
-    return null;
-  };
   
 
   const loadChatById = async (chatId: string) => {
@@ -171,7 +140,7 @@ function App() {
   };
 
   const handleNew = async () => {
-    await saveCurrentChat();
+    await saveCurrentChatWithMessages(messages);
     setMessages([]);
     setCurrentChatId('0');
     setLastSavedMessageCount(0);
@@ -185,7 +154,7 @@ function App() {
 
   const handleSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const chatId = e.target.value;
-    await saveCurrentChat();
+    await saveCurrentChatWithMessages(messages);
     await loadChatById(chatId);
   };
 
@@ -209,7 +178,7 @@ function App() {
             onClick={async () => {
               if (chatId !== currentChatId) {
                 setSelectedDropdownValue(chatId);
-                await saveCurrentChat();
+                await saveCurrentChatWithMessages(messages);
                 await loadChatById(chatId);
               }
             }}
