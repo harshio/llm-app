@@ -147,6 +147,7 @@ function App() {
     await saveCurrentChatWithMessages(messages);
     setMessages([]);
     setCurrentChatId('0');
+    setLastSavedMessageCount(0);
     setSelectedDropdownValue('');
 
     const res = await fetch("http://localhost:8000/api/chats/grouped");
