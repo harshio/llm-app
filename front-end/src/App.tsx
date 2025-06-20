@@ -33,6 +33,25 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Optional: prompt the user
+      // e.preventDefault();
+      // e.returnValue = '';
+  
+      // Save the current messages
+      if (messages.length > 0) {
+        saveCurrentChatWithMessages(messages);
+      }
+    };
+  
+    window.addEventListener('beforeunload', handleBeforeUnload);
+  
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [messages]);
+
+  useEffect(() => {
     localStorage.setItem('messages', JSON.stringify(messages));
     localStorage.setItem('currentChatId', JSON.stringify(currentChatId));
     localStorage.setItem('selectedDropdownValue', JSON.stringify(selectedDropdownValue));
