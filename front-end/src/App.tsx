@@ -23,6 +23,9 @@ function App() {
     const saveDropdownValue = localStorage.getItem('selectedDropdownValue');
     if (saveDropdownValue) setSelectedDropdownValue(JSON.parse(saveDropdownValue));
 
+    const savedLastSavedCount = localStorage.getItem('lastSavedMessageCount');
+    if (savedLastSavedCount) setLastSavedMessageCount(JSON.parse(savedLastSavedCount));
+
     fetch("http://localhost:8000/api/chats/grouped")
       .then(res => res.json())
       .then(data => {
@@ -55,6 +58,7 @@ function App() {
     localStorage.setItem('messages', JSON.stringify(messages));
     localStorage.setItem('currentChatId', JSON.stringify(currentChatId));
     localStorage.setItem('selectedDropdownValue', JSON.stringify(selectedDropdownValue));
+    localStorage.setItem('lastSavedMessageCount', JSON.stringify(messages.length));
   }, [messages]);
 
   useEffect(() => {
