@@ -7,7 +7,6 @@ function App() {
   const [inputText, setInputText] = useState('');
   const [chatIds, setChatIds] = useState<string[]>([]);
   const [chats, setChats] = useState<{ [chatId: string]: { text: string; sender: 'user' | 'system' }[] }>({});
-  const [isDirty, setIsDirty] = useState(true);
   const [currentChatId, setCurrentChatId] = useState<string>('0');
   const [selectedDropdownValue, setSelectedDropdownValue] = useState('');
   const [lastSavedMessageCount, setLastSavedMessageCount] = useState(0);
@@ -55,7 +54,6 @@ function App() {
       setMessages(chats[chatId]);
       setLastSavedMessageCount(chats[chatId].length);
       setCurrentChatId(chatId);
-      setIsDirty(false);
     } else {
       console.error("Chat ID not found in memory:", chatId);
       setMessages([]);
@@ -70,8 +68,13 @@ function App() {
   };
 
   const saveCurrentChatWithMessages = async (messageList: typeof messages): Promise<string | null> => {
+    if(lastSavedMessageCount == 1){
+      setLastSavedMessageCount(2);
+    }
     const unsavedMessages = messageList.slice(lastSavedMessageCount);
-    if (isDirty && messageList.length > 0) {
+    console.log(unsavedMessages.map(m => `${m.sender}: ${m.text}`));
+    if (messageList.length > 0) {
+      console.log("Sing it twice!");
       const isNewChat = currentChatId === '0';
       const payload = isNewChat
         ? { messages: unsavedMessages }
@@ -85,12 +88,11 @@ function App() {
   
       const data = await res.json();
       const newChatId = data.chat_id?.toString() ?? null;
+      console.log(newChatId);
   
       if (isNewChat && newChatId) {
         setCurrentChatId(newChatId);
       }
-  
-      setIsDirty(false);
       setLastSavedMessageCount(messageList.length);
   
       return newChatId;
@@ -106,7 +108,6 @@ function App() {
 
       const updatedMessages = [...messages, userMessage];
       setMessages(updatedMessages);
-      setIsDirty(true);
       setInputText('');
 
 
@@ -206,7 +207,6 @@ function App() {
             value={inputText}
             onChange={(e) => {
               setInputText(e.target.value);
-              setIsDirty(true);
             }}
             placeholder="What is the weather?"
           ></textarea>
