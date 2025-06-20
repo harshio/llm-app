@@ -59,7 +59,7 @@ function App() {
     localStorage.setItem('currentChatId', JSON.stringify(currentChatId));
     localStorage.setItem('selectedDropdownValue', JSON.stringify(selectedDropdownValue));
     localStorage.setItem('lastSavedMessageCount', JSON.stringify(messages.length));
-  }, [messages]);
+  }, [messages, currentChatId, selectedDropdownValue]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -174,12 +174,6 @@ function App() {
     const data = await res.json();
     setChats(data);
     setChatIds(Object.keys(data));
-  };
-
-  const handleSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const chatId = e.target.value;
-    await saveCurrentChatWithMessages(messages);
-    await loadChatById(chatId);
   };
 
   return (
