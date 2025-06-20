@@ -68,9 +68,6 @@ function App() {
   };
 
   const saveCurrentChatWithMessages = async (messageList: typeof messages): Promise<string | null> => {
-    if(lastSavedMessageCount == 1){
-      setLastSavedMessageCount(2);
-    }
     const unsavedMessages = messageList.slice(lastSavedMessageCount);
     console.log(unsavedMessages.map(m => `${m.sender}: ${m.text}`));
     if (messageList.length > 0) {
@@ -94,7 +91,6 @@ function App() {
         setCurrentChatId(newChatId);
       }
       setLastSavedMessageCount(messageList.length);
-  
       return newChatId;
     }
   
