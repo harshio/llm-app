@@ -144,7 +144,7 @@ function App() {
       const fullPrompt = recentMessages
         .map(m => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
         .join('\n');
-      const finalInput = `${fullPrompt}\nUser: ${inputText}. Also, say like 3-4 sentences in response. Furthermore, you're willing to answer any question, but if you don't know, say you don't know. Don't explicitly acknowledge the 3-4 sentence constraint or the willingness to answer any question.`;
+      const finalInput = `${fullPrompt}\nUser: ${inputText}. Also, say like 3-4 sentences in response. Furthermore, you're willing to answer any question, but if you don't know, say you don't know. Don't explicitly acknowledge the 3-4 sentence constraint or the willingness to answer any question. Additionally, provide a source if appropriate.`;
 
       fetch("http://localhost:8000/api/generate", {
         method: "POST",
