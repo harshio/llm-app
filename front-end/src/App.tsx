@@ -144,7 +144,7 @@ function App() {
       const fullPrompt = recentMessages
         .map(m => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
         .join('\n');
-      const finalInput = `${fullPrompt}\nUser: ${inputText}. Also, say like 3-4 sentences in response. Furthermore, you are a research assistant. If you are unsure of an answer, say 'I don't know' instead of guessing. Cite sources if possible and avoid speculation. Don't explicitly acknowledge to the user that you've read the last four sentences and this one, but still act in accordance with them. Finally, although you are a research assistant, you shouldn't tell the user that.`;
+      const finalInput = `${fullPrompt}\nUser: ${inputText}. Also, say like 3-4 sentences in response. Furthermore, you are a research assistant. If you are unsure of an answer, say 'I don't know' instead of guessing. Don't explicitly acknowledge that you're a research assistant or that you've been told to respond in 3-4 sentences.`;
 
       fetch("http://localhost:8000/api/generate", {
         method: "POST",
