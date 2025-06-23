@@ -12,6 +12,7 @@ function App() {
   const [lastSavedMessageCount, setLastSavedMessageCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [summaries, setSummaries] = useState<{ [chatId: string]: string }>({});
 
   useEffect(() => {
     const savedMessages = localStorage.getItem('messages');
@@ -25,6 +26,11 @@ function App() {
 
     const savedLastSavedCount = localStorage.getItem('lastSavedMessageCount');
     if (savedLastSavedCount) setLastSavedMessageCount(JSON.parse(savedLastSavedCount));
+
+    const savedSummaries = localStorage.getItem('summaries');
+    if (savedSummaries) {
+      setSummaries(JSON.parse(savedSummaries));
+    }
 
     fetch("http://localhost:8000/api/chats/grouped")
       .then(res => res.json())
@@ -59,7 +65,8 @@ function App() {
     localStorage.setItem('currentChatId', JSON.stringify(currentChatId));
     localStorage.setItem('selectedDropdownValue', JSON.stringify(selectedDropdownValue));
     localStorage.setItem('lastSavedMessageCount', JSON.stringify(messages.length));
-  }, [messages, currentChatId, selectedDropdownValue]);
+    localStorage.setItem('summaries', JSON.stringify(summaries));
+  }, [messages, currentChatId, selectedDropdownValue, summaries]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -71,6 +78,22 @@ function App() {
     console.log(lastSavedMessageCount);
   }, [lastSavedMessageCount]);
   
+  // Example: fetch a summary for messages[0]
+  const generateSummary = async (chatId: string, firstMessage: string) => {
+    const res = await fetch("http://localhost:8000/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: `Write a two-word description of this request: ${firstMessage}`
+      }),
+    });
+
+    const data = await res.json();
+    const summary = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "No summary";
+
+    setSummaries(prev => ({ ...prev, [chatId]: summary }));
+  };
+
 
   const loadChatById = async (chatId: string) => {
     if (chats[chatId]) {
@@ -112,6 +135,15 @@ function App() {
   
       if (isNewChat && newChatId) {
         setCurrentChatId(newChatId);
+        const firstUserMessage = messageList.find(m => m.sender === 'user');
+        if (firstUserMessage) {
+          await generateSummary(newChatId, firstUserMessage.text);
+        }
+        //Over here, I think we need to do a fetch call with /api/generate, using the
+        //first message in messages. I'll be like: Write a two-word description of 
+        //this request: messages[0] or however I'll access it
+        //I believe I'll need the React hooks for maintaining the current summary,
+        //and for maintaining a list of all summaries.
       }
       setLastSavedMessageCount(messageList.length);
       return newChatId;
@@ -201,7 +233,7 @@ function App() {
               }
             }}
           >
-            Chat #{chatId}
+            <div className="chat-summary">{summaries[chatId] ?? "..."}</div>
           </div>
         ))}
       </div>
