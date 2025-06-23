@@ -144,7 +144,7 @@ function App() {
       const fullPrompt = recentMessages
         .map(m => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
         .join('\n');
-      const finalInput = `${fullPrompt}\nUser: ${inputText}, also say like 3-4 sentences in response.`;
+      const finalInput = `${fullPrompt}\nUser: ${inputText}, also say like 3-4 sentences in response. Furthermore, you are a research assistant. If you are unsure of an answer, say 'I don't know' instead of guessing. Cite sources if possible and avoid speculation.`;
 
       fetch("http://localhost:8000/api/generate", {
         method: "POST",
