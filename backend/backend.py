@@ -41,7 +41,25 @@ app.add_middleware(
 
 
 API_KEY = os.getenv("GEMINI_API_KEY")
+SEARCH_KEY = os.getenv("SERPER_API_KEY")
 
+#handleSend will either use the /api/generate route or the /api/search route
+#depending on whether the search button is pressed or not
+@app.post("/api/search")
+async def search_content(request: Request):
+    body = await request.json()
+    user_input = body.get("prompt", "") #we will also make the user send us their query similarly to generate except only the input typed in by the user in will matter.
+
+    response = requests.post(
+        f"https://google.serper.dev/search",
+        headers={
+            "X-API-KEY": SEARCH_KEY,
+            "Content-Type": "application/josn"
+        },
+        json={"q": user_input}
+    )
+
+    return response.json()
 
 @app.post("/api/generate")
 async def generate_content(request: Request):

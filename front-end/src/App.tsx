@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Message from './Message';
+//serper.dev API Key: 83ff61fc7181a5f7237b88e7efeb91bfb1d5620a
 
 function App() {
   const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'system' }[]>([]);
@@ -14,6 +15,7 @@ function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [summaries, setSummaries] = useState<{ [chatId: string]: string }>({});
   const [fileText, setFileText] = useState('');
+  const[searching, setSearch] = useState(false);
 
   useEffect(() => {
     const savedMessages = localStorage.getItem('messages');
@@ -179,7 +181,7 @@ function App() {
         .join('\n');
       //gonna make this let finalInput real soon
       let finalInput = `${fullPrompt}\nAlso, say like 3-4 sentences in response. Furthermore, you're willing to answer any question, but if you don't know, say you don't know. Don't explicitly acknowledge the 3-4 sentence constraint or the willingness to answer any question. Additionally, provide a source if appropriate.\nUser: ${inputText}. `;
-      if(inputText && inputText.trim() != ''){
+      if(inputText && inputText.trim() !== ''){
         finalInput += `\nUser: ${inputText}.`;
       }
       if (fileText && fileText.trim() !== '') {
@@ -300,7 +302,9 @@ function App() {
                   }
                 }}
               />
-              <div className="extra-button">Search</div>
+              <div className="extra-button" onClick={()=>{
+                setSearch(!searching);
+                }}>Search</div>
             </div>
           </div>
         </div>
