@@ -180,8 +180,34 @@ body {
   cursor: pointer;
   user-select: none;
   margin-top: 6px;
+  padding-bottom: 4px;
+  padding-right: 1px;
 }
 
+.extra-button {
+  background-color: #007bff;
+  color: white;
+  padding: 5px;
+  padding-left: 10px;
+  padding-right: 12px;
+  padding-top: 7px;
+  padding-bottom: 8px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.button-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px; /* space between + and Search */
+  margin-top: 6px;
+}
+
+.upload-plus, .extra-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .title{
   background-color: #FFFFFF;

@@ -267,38 +267,41 @@ function App() {
                 <i className="bi bi-send"></i>
               </button>
             </div>
-            <label htmlFor="hidden-file-upload" className="upload-plus">
-              +
-            </label>
-            <input
-              id="hidden-file-upload"
-              type="file"
-              accept=".txt,.csv,.json"
-              style={{ display: 'none' }}
-              onChange={async (e) => {
-                if (e.target.files?.[0]) {
-                  const formData = new FormData();
-                  formData.append("file", e.target.files[0]);
+            <div className="button-row">
+              <label htmlFor="hidden-file-upload" className="upload-plus">
+                +
+              </label>
+              <input
+                id="hidden-file-upload"
+                type="file"
+                accept=".txt,.csv,.json"
+                style={{ display: 'none' }}
+                onChange={async (e) => {
+                  if (e.target.files?.[0]) {
+                    const formData = new FormData();
+                    formData.append("file", e.target.files[0]);
 
-                  try {
-                    const res = await fetch("http://localhost:8000/api/upload", {
-                      method: "POST",
-                      body: formData
-                    });
+                    try {
+                      const res = await fetch("http://localhost:8000/api/upload", {
+                        method: "POST",
+                        body: formData
+                      });
 
-                    const data = await res.json();
-                    if (data.text) {
-                      setFileText(data.text);
-                    } else {
-                      alert("No text extracted.");
+                      const data = await res.json();
+                      if (data.text) {
+                        setFileText(data.text);
+                      } else {
+                        alert("No text extracted.");
+                      }
+                    } catch (err) {
+                      console.error("Upload failed", err);
+                      alert("Upload failed");
                     }
-                  } catch (err) {
-                    console.error("Upload failed", err);
-                    alert("Upload failed");
                   }
-                }
-              }}
-            />
+                }}
+              />
+              <div className="extra-button">Search</div>
+            </div>
           </div>
         </div>
       </div>
