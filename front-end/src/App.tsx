@@ -13,6 +13,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [summaries, setSummaries] = useState<{ [chatId: string]: string }>({});
+  const [fileText, setFileText] = useState('');
 
   useEffect(() => {
     const savedMessages = localStorage.getItem('messages');
@@ -154,7 +155,7 @@ function App() {
   
 
   const handleSend = async () => {
-    if (inputText.trim()) {
+    if (inputText.trim() || fileText.trim()) {
       const userMessage = { text: inputText, sender: 'user' as const };
 
       const updatedMessages = [...messages, userMessage];
@@ -176,8 +177,14 @@ function App() {
       const fullPrompt = recentMessages
         .map(m => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
         .join('\n');
-      const finalInput = `${fullPrompt}\nUser: ${inputText}. Also, say like 3-4 sentences in response. Furthermore, you're willing to answer any question, but if you don't know, say you don't know. Don't explicitly acknowledge the 3-4 sentence constraint or the willingness to answer any question. Additionally, provide a source if appropriate.`;
-
+      //gonna make this let finalInput real soon
+      let finalInput = `${fullPrompt}\nAlso, say like 3-4 sentences in response. Furthermore, you're willing to answer any question, but if you don't know, say you don't know. Don't explicitly acknowledge the 3-4 sentence constraint or the willingness to answer any question. Additionally, provide a source if appropriate.\nUser: ${inputText}. `;
+      if(inputText && inputText.trim() != ''){
+        finalInput += `\nUser: ${inputText}.`;
+      }
+      if (fileText && fileText.trim() !== '') {
+        finalInput += `\n\n[Attached File Content]:\n${fileText}`;
+      }
       fetch("http://localhost:8000/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -246,18 +253,53 @@ function App() {
           ))}
           <div ref={messagesEndRef} />
         </div>
+        <div className={`chat-input-container ${messages.length === 0 ? 'centered' : 'bottom'}`}>
+          <div className="chat-input-wrapper">
+            <div className="chat-input-bar">
+              <textarea
+                value={inputText}
+                onChange={(e) => {
+                  setInputText(e.target.value);
+                }}
+                placeholder="What is the weather?"
+              ></textarea>
+              <button type="submit" className="btn btn-primary" onClick={handleSend}>
+                <i className="bi bi-send"></i>
+              </button>
+            </div>
+            <label htmlFor="hidden-file-upload" className="upload-plus">
+              +
+            </label>
+            <input
+              id="hidden-file-upload"
+              type="file"
+              accept=".txt,.csv,.json"
+              style={{ display: 'none' }}
+              onChange={async (e) => {
+                if (e.target.files?.[0]) {
+                  const formData = new FormData();
+                  formData.append("file", e.target.files[0]);
 
-        <div className={`chat-input-bar ${messages.length === 0 ? 'centered' : 'bottom'}`}>
-          <textarea
-            value={inputText}
-            onChange={(e) => {
-              setInputText(e.target.value);
-            }}
-            placeholder="What is the weather?"
-          ></textarea>
-          <button type="submit" className="btn btn-primary" onClick={handleSend}>
-            <i className="bi bi-send"></i>
-          </button>
+                  try {
+                    const res = await fetch("http://localhost:8000/api/upload", {
+                      method: "POST",
+                      body: formData
+                    });
+
+                    const data = await res.json();
+                    if (data.text) {
+                      setFileText(data.text);
+                    } else {
+                      alert("No text extracted.");
+                    }
+                  } catch (err) {
+                    console.error("Upload failed", err);
+                    alert("Upload failed");
+                  }
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

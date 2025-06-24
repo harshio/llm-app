@@ -1,6 +1,6 @@
 # backend.py
 import random
-from fastapi import FastAPI, Request, Depends, APIRouter, Body
+from fastapi import FastAPI, Request, Depends, APIRouter, Body, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import requests
 import os
@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from typing import List, Literal, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from models import Message as DBMessage, SessionLocal
+from fastapi.responses import JSONResponse
 
 
 load_dotenv()
@@ -81,6 +82,14 @@ def save_chat(messages: List[MessageIn], chat_id: Optional[int] = Body(0), db: S
     db.commit()
     return {"status": "saved", "chat_id": chat_id, "count": len(messages)}
 
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        text = contents.decode("utf-8")
+        return JSONResponse(content={"text": text})  # ✅ send raw text back
+    except Exception as e:
+        return JSONResponse(content={"error": f"File read failed: {e}"}, status_code=400)
 
 
 @app.get("/api/chats")
