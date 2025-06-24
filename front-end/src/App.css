@@ -129,23 +129,27 @@ body {
 
 .chat-input-container {
   position: absolute;
-  left: 34%;
-  transform: translateX(-50%);
-  transition: top 0.4s ease, transform 0.4s ease;
+  left: 0;
+  right: 0;
+  padding-right: 150px;
+  display: flex;
+  justify-content: center;
+  transition: top 0.4s ease;
 }
 
 .chat-input-container.centered {
-  top: 53%;
-  transform: translate(-50%, -50%);
+  top: 43%;
+  transform: translatY(-50%);
 }
 
 .chat-input-container.bottom {
   top: 92%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
 }
 
 .chat-input-wrapper {
   display: flex;
+  margin: 0 auto;
   flex-direction: column;
   align-items: flex-start;
 }
