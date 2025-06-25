@@ -194,21 +194,33 @@ function App() {
         if(inputText && inputText.trim() !== ''){
           finalInput += `\n${inputText}.`;
         }
-        fetch("http://localhost:8000/api/search", {
+        const searchRes = await fetch("http://localhost:8000/api/search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: finalInput })
-        })
-          .then(res => res.json())
-          .then(data => {
-            const reply = data.knowledgeGraph?.description
-             ?? data.answerBox?.answer
-             ?? data.organic?.[0]?.snippet
-             ?? "[No result found]";
-            const systemMessage = { text: reply, sender: 'system' as const };
-            setMessages(prev => [...prev, systemMessage]);
-          })
-          .catch(err => console.error("Error calling FastAPI:", err));
+          body: JSON.stringify({ prompt: finalInput }),
+        });
+        
+        const data = await searchRes.json();
+        
+        const reply = data.knowledgeGraph?.description
+          ?? data.answerBox?.answer
+          ?? data.organic?.[0]?.snippet
+          ?? "[No result found]";
+        
+        // Send reply to LLM for summarization
+        const summaryPrompt = `Summarize the core answer to the following query in 1-4 clear sentences. Only include relevant facts. Query: ${finalInput}. Results: ${reply}`;
+        
+        const summaryRes = await fetch("http://localhost:8000/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: summaryPrompt }),
+        });
+        
+        const summaryData = await summaryRes.json();
+        const summarized = summaryData.candidates?.[0]?.content?.parts?.[0]?.text ?? "[No summary returned]";
+        
+        const systemMessage = { text: summarized, sender: 'system' as const };
+        setMessages(prev => [...prev, systemMessage]);
 
         setInputText('');
       }
