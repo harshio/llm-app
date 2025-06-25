@@ -132,6 +132,7 @@ body {
   left: 0;
   right: 0;
   padding-right: 150px;
+  padding-top: 40px;
   display: flex;
   justify-content: center;
   transition: top 0.4s ease;
