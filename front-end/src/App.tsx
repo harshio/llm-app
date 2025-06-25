@@ -208,7 +208,7 @@ function App() {
             const systemMessage = { text: reply, sender: 'system' as const };
             setMessages(prev => [...prev, systemMessage]);
           })
-          .catch(err => console.error("Error calling FasrAPI:", err));
+          .catch(err => console.error("Error calling FastAPI:", err));
 
         setInputText('');
       }
