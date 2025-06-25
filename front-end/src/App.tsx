@@ -202,13 +202,23 @@ function App() {
         
         const data = await searchRes.json();
         
+        const fallbackSnippets = (data.organic || [])
+          .filter((o: { snippet?: string }) => o?.snippet)
+          .slice(0, 5)
+          .map((o: { snippet?: string }) => o.snippet)
+          .join("\n\n");
         const reply = data.knowledgeGraph?.description
           ?? data.answerBox?.answer
-          ?? data.organic?.[0]?.snippet
+          ?? fallbackSnippets
           ?? "[No result found]";
         
         // Send reply to LLM for summarization
-        const summaryPrompt = `Summarize the core answer to the following query in 1-4 clear sentences. Only include relevant facts. Query: ${finalInput}. Results: ${reply}`;
+        const summaryPrompt = `Summarize the answer to the following query in 1-4 concise sentences. Only include the most relevant facts.
+
+        Query: ${finalInput}
+
+        Search results:
+        ${reply}`;
         
         const summaryRes = await fetch("http://localhost:8000/api/generate", {
           method: "POST",
