@@ -201,7 +201,10 @@ function App() {
         })
           .then(res => res.json())
           .then(data => {
-            const reply = data.knowledgeGraph?.description ?? "[No reply]";
+            const reply = data.knowledgeGraph?.description
+             ?? data.answerBox?.answer
+             ?? data.organic?.[0]?.snippet
+             ?? "[No result found]";
             const systemMessage = { text: reply, sender: 'system' as const };
             setMessages(prev => [...prev, systemMessage]);
           })
