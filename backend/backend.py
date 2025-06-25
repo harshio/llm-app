@@ -54,7 +54,7 @@ async def search_content(request: Request):
         f"https://google.serper.dev/search",
         headers={
             "X-API-KEY": SEARCH_KEY,
-            "Content-Type": "application/josn"
+            "Content-Type": "application/json"
         },
         json={"q": user_input}
     )

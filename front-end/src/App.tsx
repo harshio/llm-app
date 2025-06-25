@@ -35,6 +35,8 @@ function App() {
       setSummaries(JSON.parse(savedSummaries));
     }
 
+    setSearch(false);
+
     fetch("http://localhost:8000/api/chats/grouped")
       .then(res => res.json())
       .then(data => {
@@ -187,20 +189,42 @@ function App() {
       if (fileText && fileText.trim() !== '') {
         finalInput += `\n\n[Attached File Content]:\n${fileText}`;
       }
-      fetch("http://localhost:8000/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: finalInput })
-      })
-        .then(res => res.json())
-        .then(data => {
-          const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "[No reply]";
-          const systemMessage = { text: reply, sender: 'system' as const };
-          setMessages(prev => [...prev, systemMessage]);
+      if(searching){
+        finalInput = "";
+        if(inputText && inputText.trim() !== ''){
+          finalInput += `\n${inputText}.`;
+        }
+        fetch("http://localhost:8000/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: finalInput })
         })
-        .catch(err => console.error("Error calling FastAPI:", err));
+          .then(res => res.json())
+          .then(data => {
+            const reply = data.knowledgeGraph?.description ?? "[No reply]";
+            const systemMessage = { text: reply, sender: 'system' as const };
+            setMessages(prev => [...prev, systemMessage]);
+          })
+          .catch(err => console.error("Error calling FasrAPI:", err));
 
-      setInputText('');
+        setInputText('');
+      }
+      else{
+        fetch("http://localhost:8000/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: finalInput })
+        })
+          .then(res => res.json())
+          .then(data => {
+            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "[No reply]";
+            const systemMessage = { text: reply, sender: 'system' as const };
+            setMessages(prev => [...prev, systemMessage]);
+          })
+          .catch(err => console.error("Error calling FastAPI:", err));
+
+        setInputText('');
+      }
     }
   };
 
@@ -210,6 +234,7 @@ function App() {
     setCurrentChatId('0');
     setLastSavedMessageCount(0);
     setSelectedDropdownValue('');
+    setSearch(false);
 
     const res = await fetch("http://localhost:8000/api/chats/grouped");
     const data = await res.json();
@@ -302,7 +327,7 @@ function App() {
                   }
                 }}
               />
-              <div className="extra-button" onClick={()=>{
+              <div className={`extra-button ${searching ? 'black' : ''}`} onClick={()=>{
                 setSearch(!searching);
                 }}>Search</div>
             </div>

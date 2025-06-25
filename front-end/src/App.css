@@ -196,6 +196,15 @@ body {
   margin-top: 5px;
 }
 
+.extra-button:hover {
+  cursor: pointer;
+  background-color: #0056b3;
+}
+
+.extra-button.black {
+  background-color: black;
+}
+
 .button-row {
   display: flex;
   flex-direction: row;
