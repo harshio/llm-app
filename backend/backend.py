@@ -10,12 +10,118 @@ from typing import List, Literal, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from models import Message as DBMessage, SessionLocal
 from fastapi.responses import JSONResponse
-
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.prompts import PromptTemplate
+from langgraph.graph import StateGraph, END
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.tools import tool
+import json
 
 load_dotenv()
 
-
 app = FastAPI()
+
+llm = ChatGoogleGenerativeAI(model="models/gemini-2.0-flash")
+search_tool = DuckDuckGoSearchRun()
+
+@tool
+def web_search(query: str) -> str:
+   """Search the web using DuckDuckGo."""
+   return search_tool.run(query)
+
+def research_agent(state: dict) -> dict:
+    query = state["input"]
+    print(f"\n🔍 Researching via Serper: {query}")
+
+    try:
+        response = requests.post(
+            "https://google.serper.dev/search",
+            headers={
+                "X-API-KEY": SEARCH_KEY,
+                "Content-Type": "application/json"
+            },
+            json={"q": query}
+        )
+
+        data = response.json()
+
+        # Extract useful parts
+        if "answerBox" in data and "answer" in data["answerBox"]:
+            result = data["answerBox"]["answer"]
+        elif "organic" in data and len(data["organic"]) > 0:
+            result = data["organic"][0]["snippet"]
+        else:
+            result = "No good search results found."
+
+    except Exception as e:
+        print("❌ Serper search failed:", e)
+        result = f"Search failed: {str(e)}"
+
+    return {"research": result}
+
+def summary_agent(state: dict) -> dict:
+   print("\n Summarizing research results...")
+   prompt = PromptTemplate.from_template(
+       "Summarize the following research results:\n\n{research}."
+   )
+   chain = prompt | llm
+   summary = chain.invoke({"research": state["research"]})
+   print("\n Summary:\n", summary.content)
+   return {"summary": summary}
+
+
+def router_agent(state: dict) -> dict:
+   print("\n🧭 Deciding how to handle the query...")
+
+
+   prompt = PromptTemplate.from_template("""
+You are a smart router agent. Given the user's question:
+
+
+"{question}"
+
+
+Decide whether it can be answered directly ("INITIAL") or needs online research ("RESEARCH").
+Respond with one word: INITIAL or RESEARCH.
+""")
+
+
+   chain = prompt | llm
+   response = chain.invoke({"question": state["input"]})
+   decision = response.content.strip().upper()
+
+
+   print(f"🧭 LLM chose: {decision}")
+   return {
+       "next": decision,
+       "input": state["input"]  # ✅ forward input to the next agent
+   }
+
+
+
+
+def initial_agent(state: dict) -> dict:
+   print("\n💡 Initial answer agent responding...")
+   prompt = PromptTemplate.from_template("Answer briefly and clearly:\n\n{question}")
+   chain = prompt | llm
+   answer = chain.invoke({"question": state["input"]})
+   print("💬", answer.content)
+   return {"answer": answer}
+
+builder = StateGraph(dict)
+builder.add_node("Router", router_agent)
+builder.add_node("Initial", initial_agent)
+builder.add_node("Research", research_agent)
+builder.add_node("Summary", summary_agent)
+builder.set_entry_point("Router")
+builder.add_conditional_edges("Router", lambda state: state["next"], {
+   "INITIAL": "Initial",
+   "RESEARCH": "Research"
+})
+builder.add_edge("Initial", END)
+builder.add_edge("Research", "Summary")
+builder.add_edge("Summary", END)
+workflow = builder.compile()
 
 
 def get_db():
@@ -45,7 +151,7 @@ SEARCH_KEY = os.getenv("SERPER_API_KEY")
 
 #handleSend will either use the /api/generate route or the /api/search route
 #depending on whether the search button is pressed or not
-@app.post("/api/search")
+@app.post("/api/search") #this route will no longer be called since we'll be removing the search tool option
 async def search_content(request: Request):
     body = await request.json()
     user_input = body.get("prompt", "") #we will also make the user send us their query similarly to generate except only the input typed in by the user in will matter.
@@ -61,27 +167,29 @@ async def search_content(request: Request):
 
     return response.json()
 
+@app.post("/api/summary")
+async def generate_summary(request: Request):
+    body = await request.json()
+    first_message = body.get("message", "")
+    
+    # Keep this very simple: just ask Gemini to give 2-word summary.
+    prompt = PromptTemplate.from_template("Write a 2-word description of this request:\n\n{message}")
+    chain = prompt | llm
+    result = chain.invoke({"message": first_message})
+    return {"response": result.content.strip()}
+
 @app.post("/api/generate")
 async def generate_content(request: Request):
-   body = await request.json()
-   user_input = body.get("prompt", "")
-
-
-   response = requests.post(
-       f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={API_KEY}",
-       headers={"Content-Type": "application/json"},
-       json={
-           "contents": [
-               {
-                   "role": "user",
-                   "parts": [{"text": user_input}]
-               }
-           ]
-       }
-   )
-
-
-   return response.json()
+    body = await request.json()
+    user_input = body.get("prompt", "")
+    result = workflow.invoke({"input": user_input})
+    if "answer" in result:
+            content = result["answer"].content
+    elif "summary" in result:
+            content = result["summary"].content
+    else:
+        content = "Sorry, I couldn't generate a response."
+    return {"response": content}
 
 
 @app.post("/api/chats")
