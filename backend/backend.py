@@ -40,7 +40,7 @@ app.add_middleware(
 )
 
 
-API_KEY = os.getenv("GEMINI_API_KEY")
+API_KEY = os.getenv("GOOGLE_API_KEY")
 SEARCH_KEY = os.getenv("SERPER_API_KEY")
 
 #handleSend will either use the /api/generate route or the /api/search route
