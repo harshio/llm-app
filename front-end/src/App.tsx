@@ -85,16 +85,14 @@ function App() {
   
   // Example: fetch a summary for messages[0]
   const generateSummary = async (chatId: string, firstMessage: string) => {
-    const res = await fetch("http://localhost:8000/api/generate", {
+    const res = await fetch("http://localhost:8000/api/summary", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: `Write a two-word description of this request: ${firstMessage}`
-      }),
+      body: JSON.stringify({ message: firstMessage }),
     });
 
     const data = await res.json();
-    const summary = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "No summary";
+    const summary = data.response ?? "No summary";
 
     setSummaries(prev => ({ ...prev, [chatId]: summary }));
   };
@@ -177,79 +175,28 @@ function App() {
         }
       }
 
-      const recentMessages = updatedMessages.slice(-20);
-      const fullPrompt = recentMessages
-        .map(m => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
-        .join('\n');
       //gonna make this let finalInput real soon
-      let finalInput = `${fullPrompt}\nAlso, say like 3-4 sentences in response. Furthermore, you're willing to answer any question, but if you don't know, say you don't know. Don't explicitly acknowledge the 3-4 sentence constraint or the willingness to answer any question. Additionally, provide a source if appropriate.\nUser: ${inputText}. `;
+      let finalInput = ``;
       if(inputText && inputText.trim() !== ''){
-        finalInput += `\nUser: ${inputText}.`;
+        finalInput += `${inputText}.`;
       }
       if (fileText && fileText.trim() !== '') {
         finalInput += `\n\n[Attached File Content]:\n${fileText}`;
       }
-      if(searching){
-        finalInput = "";
-        if(inputText && inputText.trim() !== ''){
-          finalInput += `\n${inputText}.`;
-        }
-        const searchRes = await fetch("http://localhost:8000/api/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: finalInput }),
-        });
-        
-        const data = await searchRes.json();
-        
-        const fallbackSnippets = (data.organic || [])
-          .filter((o: { snippet?: string }) => o?.snippet)
-          .slice(0, 5)
-          .map((o: { snippet?: string }) => o.snippet)
-          .join("\n\n");
-        const reply = data.knowledgeGraph?.description
-          ?? data.answerBox?.answer
-          ?? fallbackSnippets
-          ?? "[No result found]";
-        
-        // Send reply to LLM for summarization
-        const summaryPrompt = `Summarize the answer to the following query in 1-4 concise sentences. Only include the most relevant facts.
-
-        Query: ${finalInput}
-
-        Search results:
-        ${reply}`;
-        
-        const summaryRes = await fetch("http://localhost:8000/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: summaryPrompt }),
-        });
-        
-        const summaryData = await summaryRes.json();
-        const summarized = summaryData.candidates?.[0]?.content?.parts?.[0]?.text ?? "[No summary returned]";
-        
-        const systemMessage = { text: summarized, sender: 'system' as const };
-        setMessages(prev => [...prev, systemMessage]);
-
-        setInputText('');
-      }
-      else{
-        fetch("http://localhost:8000/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: finalInput })
+      fetch("http://localhost:8000/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: finalInput })
+      })
+        .then(res => res.json())
+        .then(data => {
+          const reply = data.response ?? "[No reply]";
+          const systemMessage = { text: reply, sender: 'system' as const };
+          setMessages(prev => [...prev, systemMessage]);
         })
-          .then(res => res.json())
-          .then(data => {
-            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "[No reply]";
-            const systemMessage = { text: reply, sender: 'system' as const };
-            setMessages(prev => [...prev, systemMessage]);
-          })
-          .catch(err => console.error("Error calling FastAPI:", err));
+        .catch(err => console.error("Error calling FastAPI:", err));
 
-        setInputText('');
-      }
+      setInputText('');
     }
   };
 
