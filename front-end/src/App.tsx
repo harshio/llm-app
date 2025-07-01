@@ -159,7 +159,7 @@ function App() {
   const handleSend = async () => {
     if (inputText.trim() || fileText.trim()) {
       const userMessage = { text: inputText, sender: 'user' as const };
-
+      const priorMessages = [...messages];
       const updatedMessages = [...messages, userMessage];
       setMessages(updatedMessages);
       setInputText('');
@@ -186,7 +186,10 @@ function App() {
       fetch("http://localhost:8000/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: finalInput })
+        body: JSON.stringify({ 
+          prompt: finalInput,
+          messages: priorMessages.slice(-20),
+         })
       })
         .then(res => res.json())
         .then(data => {

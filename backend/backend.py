@@ -72,7 +72,7 @@ def summary_agent(state: dict) -> dict:
 
 def router_agent(state: dict) -> dict:
    print("\n🧭 Deciding how to handle the query...")
-
+   print("\n🔍 Full incoming state to router:", state)
 
    prompt = PromptTemplate.from_template("""
 You are a smart router agent. Given the user's question:
@@ -92,21 +92,40 @@ Respond with one word: INITIAL or RESEARCH.
 
 
    print(f"🧭 LLM chose: {decision}")
-   return {
-       "next": decision,
-       "input": state["input"]  # ✅ forward input to the next agent
-   }
+
+   new_state = {"next": decision, "input": state["input"]}
+
+   if decision == "INITIAL" and "messages" in state:
+       new_state["messages"] = state["messages"]
+
+   return new_state
 
 
 
 
 def initial_agent(state: dict) -> dict:
-   print("\n💡 Initial answer agent responding...")
-   prompt = PromptTemplate.from_template("Answer briefly and clearly:\n\n{question}")
-   chain = prompt | llm
-   answer = chain.invoke({"question": state["input"]})
-   print("💬", answer.content)
-   return {"answer": answer}
+    print("\n💡 Initial answer agent responding...")
+    print("\n🧾 State passed into initial agent:", state)
+
+    messages = state.get("messages", [])
+    conversation = ""
+    for msg in messages:
+        sender = msg["sender"].capitalize()
+        text = msg["text"]
+        conversation += f"{sender}: {text}\n"
+
+    prompt = PromptTemplate.from_template(
+        "Here is the conversation so far:\n\n{chat_history}\n\nUser: {question}\n\nAnswer briefly and clearly."
+    )
+    chain = prompt | llm
+    answer = chain.invoke({
+        "chat_history": conversation.strip(),
+        "question": state["input"]
+    })
+
+    print("💬", answer.content)
+    return {"answer": answer}
+
 
 builder = StateGraph(dict)
 builder.add_node("Router", router_agent)
@@ -181,8 +200,12 @@ async def generate_summary(request: Request):
 @app.post("/api/generate")
 async def generate_content(request: Request):
     body = await request.json()
+    print("\n📩 Received request body:", body)
     user_input = body.get("prompt", "")
-    result = workflow.invoke({"input": user_input})
+    messages = body.get("messages", "")
+    result = workflow.invoke({"input": user_input,
+                              "messages": messages
+                              })
     if "answer" in result:
             content = result["answer"].content
     elif "summary" in result:
