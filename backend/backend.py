@@ -15,7 +15,6 @@ from langchain.prompts import PromptTemplate
 from langgraph.graph import StateGraph, END
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.tools import tool
-from langchain_core.messages import HumanMessage, AIMessage
 import json
 
 load_dotenv()
@@ -102,30 +101,12 @@ Respond with one word: INITIAL or RESEARCH.
 
 
 def initial_agent(state: dict) -> dict:
-    print("\n💡 Initial answer agent responding...")
-
-    formatted_history = state.get("history", "")
-
-    prompt = PromptTemplate.from_template("""
-You are a helpful assistant in an ongoing conversation.
-
-Conversation so far:
-{history}
-
-Now the user says: {question}
-
-Respond helpfully and naturally.
-""")
-
-    chain = prompt | llm
-    answer = chain.invoke({
-        "history": formatted_history,
-        "question": state["input"]
-    })
-
-    print("💬", answer.content)
-    return {"answer": answer}
-
+   print("\n💡 Initial answer agent responding...")
+   prompt = PromptTemplate.from_template("Answer briefly and clearly:\n\n{question}")
+   chain = prompt | llm
+   answer = chain.invoke({"question": state["input"]})
+   print("💬", answer.content)
+   return {"answer": answer}
 
 builder = StateGraph(dict)
 builder.add_node("Router", router_agent)
@@ -201,43 +182,14 @@ async def generate_summary(request: Request):
 async def generate_content(request: Request):
     body = await request.json()
     user_input = body.get("prompt", "")
-    messages = body.get("messages", [])
-
-    # Rebuild memory from provided messages
-    from langchain.memory.chat_message_histories import ChatMessageHistory
-    memory = ChatMessageHistory()
-
-    for m in messages:
-        if m["sender"] == "user":
-            memory.add_user_message(m["text"])
-        else:
-            memory.add_ai_message(m["text"])
-
-    # Format chat history
-    formatted_history = "\n".join([
-        f"{'User' if isinstance(m, HumanMessage) else 'Assistant'}: {m.content}"
-        for m in memory.messages
-    ])
-    print("\n🧠 Formatted chat history being sent to LLM:\n", formatted_history)
-
-    # Run through your initial agent only
-    prompt = PromptTemplate.from_template(
-        """You are a helpful assistant in an ongoing conversation.
-
-Conversation so far:
-{history}
-
-Now the user says: {question}
-
-Respond helpfully and naturally."""
-    )
-    chain = prompt | llm
-    answer = chain.invoke({
-        "history": formatted_history,
-        "question": user_input
-    })
-
-    return {"response": answer.content}
+    result = workflow.invoke({"input": user_input})
+    if "answer" in result:
+            content = result["answer"].content
+    elif "summary" in result:
+            content = result["summary"].content
+    else:
+        content = "Sorry, I couldn't generate a response."
+    return {"response": content}
 
 
 @app.post("/api/chats")
