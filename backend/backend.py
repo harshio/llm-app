@@ -1,4 +1,5 @@
 # backend.py
+from datetime import datetime
 import random
 from fastapi import FastAPI, Request, Depends, APIRouter, Body, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +17,7 @@ from langgraph.graph import StateGraph, END
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.tools import tool
 import json
+import re
 
 load_dotenv()
 
@@ -23,6 +25,62 @@ app = FastAPI()
 
 llm = ChatGoogleGenerativeAI(model="models/gemini-2.0-flash")
 search_tool = DuckDuckGoSearchRun()
+
+CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+REFRESH_TOKEN = os.getenv("GOOGLE_REFRESH_TOKEN")
+
+def get_access_token():
+   token_url = "https://oauth2.googleapis.com/token"
+   data = {
+       "client_id": CLIENT_ID,
+       "client_secret": CLIENT_SECRET,
+       "refresh_token": REFRESH_TOKEN,
+       "grant_type": "refresh_token"
+   }
+
+
+   response = requests.post(token_url, data=data)
+   response.raise_for_status()
+   access_token = response.json()["access_token"]
+   return access_token
+
+def create_calendar_event(summary: str, description: str, date: str, startTime: str, endTime: str):
+   access_token = get_access_token()
+   headers = {
+       "Authorization": f"Bearer {access_token}",
+       "Content-Type": "application/json"
+   }
+
+   if hasattr(date, "content"):
+        date = date.content.strip()
+   else:
+        date = str(date).strip()
+
+   event = {
+       "summary": summary,
+       "description": description,
+       "start": {
+           "dateTime": f"{date}T{startTime}",
+           "timeZone": "America/New_York"
+       },
+       "end": {
+           "dateTime": f"{date}T{endTime}",
+           "timeZone": "America/New_York"
+       }
+   }
+
+   print(json.dumps(event, indent=2))
+   url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+   response = requests.post(url, json=event, headers=headers)
+
+
+   if response.status_code == 200 or response.status_code == 201:
+       print("✅ Event created successfully!")
+       print(response.json())
+   else:
+       print("❌ Failed to create event.")
+       print(response.text)
 
 @tool
 def web_search(query: str) -> str:
@@ -69,6 +127,132 @@ def summary_agent(state: dict) -> dict:
    print("\n Summary:\n", summary.content)
    return {"summary": summary}
 
+def initial_planner(state: dict) -> dict:
+    prompt = PromptTemplate.from_template("""
+You are a scheduling agent.
+
+Your job is to extract key event details from the user's request and return them as a single JSON object.
+
+User's request:
+"{question}"
+
+Return a JSON object with the following fields:
+- "summary": a short, two-word summary of the event
+- "description": a detailed explanation of the event
+- "date": the date the event occurs, formatted exactly as YYYY-MM-DD
+- "startTime": the event start time, formatted exactly as HH:MM:00 (24-hour format)
+- "endTime": the event end time, formatted exactly as HH:MM:00 (24-hour format)
+
+Respond with only the JSON object. Do not include any explanation, notes, or Markdown formatting.
+""")
+
+    chain = prompt | llm
+    response = chain.invoke({"question": state["input"]})
+    #response is now a JSON string hopefully
+    raw_text = response.content.strip()
+    cleaned = re.sub(r"```(?:json)?|```", "", raw_text, flags=re.IGNORECASE).strip()
+
+    print("🧹 Cleaned LLM response (initial_planner):", cleaned)
+
+    try:
+        responses = json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        print("❌ JSON decode error in initial_planner:", e)
+        print("🧾 Raw response was:", raw_text)
+        raise
+    create_calendar_event(responses["summary"], responses["description"], responses["date"], responses["startTime"], responses["endTime"])
+    #now the event should be scheduled.
+    return {"solution": "The event has been scheduled. Check your Google Calendar for confirmation."}
+
+def date_normalizer(state: dict) -> dict:
+    today = datetime.now()
+    today_str = today.strftime("%A, %B %d, %Y")
+    prompt = PromptTemplate.from_template("""
+You are an agent skilled at interpreting vague or relative date phrases.
+
+Assume today's date is: {today_date}
+
+Given the user's request:
+"{question}"
+
+Determine what specific calendar date the user is referring to.
+Return only the date in this exact format:
+
+YYYY-MM-DD
+
+Do not include any explanation, punctuation, or extra text — just return the date.
+    """)
+
+    chain = prompt | llm
+    response = chain.invoke(
+        {
+            "today_date": today_str,
+            "question": state["input"]
+        }
+    ) #will theoretically return something like 2025-07-04
+    #and store it in response
+    return {"response": response, "question": state["input"]}
+
+def planner_agent(state: dict) -> dict:
+    date = state["response"]
+    prompt = PromptTemplate.from_template("""
+You are a scheduling agent.
+
+Your job is to extract key event details from the user's request and return them as a single JSON object.
+
+User's request:
+"{question}"
+
+Return a JSON object with the following fields:
+- "summary": a short, two-word summary of the event
+- "description": a detailed explanation of the event
+- "startTime": the event start time, formatted exactly as HH:MM:00 (24-hour format)
+- "endTime": the event end time, formatted exactly as HH:MM:00 (24-hour format)
+
+Respond with only the JSON object. Do not include any explanation, notes, or Markdown formatting.
+""")
+
+    chain = prompt | llm
+    response = chain.invoke({"question": state["question"]})
+    raw_text = response.content.strip()
+    cleaned = re.sub(r"```(?:json)?|```", "", raw_text, flags=re.IGNORECASE).strip()
+
+    print("🧹 Cleaned LLM response:", cleaned)
+
+    try:
+        responses = json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        print("❌ JSON decode error in planner_agent:", e)
+        print("🧾 Raw response was:", raw_text)
+        raise
+    create_calendar_event(responses["summary"], responses["description"], date, responses["startTime"], responses["endTime"])
+    #now the event should be scheduled.
+    return {"solution": "The event has been scheduled. Check your Google Calendar for confirmation."}
+
+def calendar_planner(state: dict) -> dict:
+    prompt = PromptTemplate.from_template("""
+You are a smart router agent specializing in scheduling. Given the user's request:
+
+"{question}"
+
+Determine whether the date in the request is already in the format YYYY-MM-DD.
+
+If the date is correctly formatted, respond with exactly:
+PLANNER
+
+If the date is vague, relative, or needs conversion, respond with exactly:
+DATE
+
+Respond with just one of those two words. Do not include any punctuation, explanation, or quotation marks.
+""")
+
+
+    chain = prompt | llm
+    response = chain.invoke({"question": state["input"]})
+    decision = response.content.strip().upper()
+    new_state = {"next": decision, "input": state["input"]}
+    return new_state
+
 
 def router_agent(state: dict) -> dict:
    print("\n🧭 Deciding how to handle the query...")
@@ -81,8 +265,8 @@ You are a smart router agent. Given the user's question:
 "{question}"
 
 
-Decide whether it can be answered directly ("INITIAL") or needs online research ("RESEARCH").
-Respond with one word: INITIAL or RESEARCH.
+Decide whether it can be answered directly ("INITIAL") or needs online research ("RESEARCH"), or if the user is asking to schedule something ("CALENDAR").
+Respond with one word: INITIAL or RESEARCH or CALENDAR.
 """)
 
 
@@ -132,14 +316,26 @@ builder.add_node("Router", router_agent)
 builder.add_node("Initial", initial_agent)
 builder.add_node("Research", research_agent)
 builder.add_node("Summary", summary_agent)
+builder.add_node("Calendar", calendar_planner)
+builder.add_node("InitialPlanner", initial_planner)
+builder.add_node("DateNormalizer", date_normalizer)
+builder.add_node("Planner", planner_agent)
 builder.set_entry_point("Router")
 builder.add_conditional_edges("Router", lambda state: state["next"], {
    "INITIAL": "Initial",
-   "RESEARCH": "Research"
+   "RESEARCH": "Research",
+   "CALENDAR": "Calendar"
+})
+builder.add_conditional_edges("Calendar", lambda state: state["next"], {
+    "PLANNER": "InitialPlanner",
+    "DATE": "DateNormalizer"
 })
 builder.add_edge("Initial", END)
 builder.add_edge("Research", "Summary")
 builder.add_edge("Summary", END)
+builder.add_edge("DateNormalizer", "Planner")
+builder.add_edge("InitialPlanner", END)
+builder.add_edge("Planner", END)
 workflow = builder.compile()
 
 
@@ -210,6 +406,8 @@ async def generate_content(request: Request):
             content = result["answer"].content
     elif "summary" in result:
             content = result["summary"].content
+    elif "solution" in result:
+            content = result["solution"]
     else:
         content = "Sorry, I couldn't generate a response."
     return {"response": content}
