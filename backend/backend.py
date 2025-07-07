@@ -1,5 +1,5 @@
 # backend.py
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 from fastapi import FastAPI, Request, Depends, APIRouter, Body, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,7 +45,7 @@ def get_access_token():
    access_token = response.json()["access_token"]
    return access_token
 
-def create_calendar_event(summary: str, description: str, date: str, startTime: str, endTime: str):
+def create_calendar_event(summary: str, description: str, date: str, startTime: str, endTime: str) -> bool:
    access_token = get_access_token()
    headers = {
        "Authorization": f"Bearer {access_token}",
@@ -71,16 +71,41 @@ def create_calendar_event(summary: str, description: str, date: str, startTime: 
    }
 
    print(json.dumps(event, indent=2))
+   start_datetime = f"{date}T{startTime}-04:00"
+   end_datetime = f"{date}T{endTime}-04:00"
+   query_params = {
+        "timeMin": f"{date}T00:00:00-04:00",
+        "timeMax": f"{date}T23:59:59-04:00",
+        "singleEvents": "true",
+        "orderBy": "startTime"
+   }
+   get_url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+   check_response = requests.get(get_url, headers=headers, params=query_params)
+   if check_response.status_code == 200:
+        events = check_response.json().get("items", [])
+        print("Start: ", start_datetime)
+        print("End: ", end_datetime)
+        print("Found events on same day: ", len(events))
+        for existing in events:
+            existing_end = existing.get("end", {}).get("dateTime", "")
+            existing_start = existing.get("start", {}).get("dateTime", "")
+            print("Existing Event: ")
+            print("Start: ", existing_start)
+            print("End: ", existing_end)
+            if existing_end == end_datetime and existing_start == start_datetime:
+                print("Duplicate event found. Skipping creation.")
+                return False
+   else:
+       print("Failed to check for duplicates. Proceeding with event creation.")
    url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
    response = requests.post(url, json=event, headers=headers)
-
-
    if response.status_code == 200 or response.status_code == 201:
        print("✅ Event created successfully!")
-       print(response.json())
+       return True
    else:
        print("❌ Failed to create event.")
        print(response.text)
+       return False
 
 @tool
 def web_search(query: str) -> str:
@@ -160,9 +185,12 @@ Respond with only the JSON object. Do not include any explanation, notes, or Mar
         print("❌ JSON decode error in initial_planner:", e)
         print("🧾 Raw response was:", raw_text)
         raise
-    create_calendar_event(responses["summary"], responses["description"], responses["date"], responses["startTime"], responses["endTime"])
+    created = create_calendar_event(responses["summary"], responses["description"], responses["date"], responses["startTime"], responses["endTime"])
     #now the event should be scheduled.
-    return {"solution": "The event has been scheduled. Check your Google Calendar for confirmation."}
+    if created:
+        return {"solution": "The event has been scheduled. Check your Google Calendar for confirmation."}
+    else:
+        return {"solution": "This event was already scheduled and will not be added again."}
 
 def date_normalizer(state: dict) -> dict:
     today = datetime.now()
@@ -225,9 +253,12 @@ Respond with only the JSON object. Do not include any explanation, notes, or Mar
         print("❌ JSON decode error in planner_agent:", e)
         print("🧾 Raw response was:", raw_text)
         raise
-    create_calendar_event(responses["summary"], responses["description"], date, responses["startTime"], responses["endTime"])
+    created = create_calendar_event(responses["summary"], responses["description"], date, responses["startTime"], responses["endTime"])
     #now the event should be scheduled.
-    return {"solution": "The event has been scheduled. Check your Google Calendar for confirmation."}
+    if created:
+        return {"solution": "The event has been scheduled. Check your Google Calendar for confirmation."}
+    else:
+        return  {"solution": "This event was already scheduled and will not be added again."}
 
 def calendar_planner(state: dict) -> dict:
     prompt = PromptTemplate.from_template("""
