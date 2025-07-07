@@ -135,12 +135,18 @@ def research_agent(state: dict) -> dict:
             result = data["organic"][0]["snippet"]
         else:
             result = "No good search results found."
+        
+        links = [item["link"] for item in data.get("organic", [])[:5]]
 
     except Exception as e:
         print("❌ Serper search failed:", e)
         result = f"Search failed: {str(e)}"
+        links = []
 
-    return {"research": result}
+    return {
+        "research": result,
+        "sources": links
+    }
 
 def summary_agent(state: dict) -> dict:
    print("\n Summarizing research results...")
@@ -149,6 +155,8 @@ def summary_agent(state: dict) -> dict:
    )
    chain = prompt | llm
    summary = chain.invoke({"research": state["research"]})
+   sources = "\n".join(state["sources"])
+   summary.content += f"\nHere are my sources: \n{sources}"
    print("\n Summary:\n", summary.content)
    return {"summary": summary}
 
