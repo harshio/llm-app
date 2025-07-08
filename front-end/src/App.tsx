@@ -15,7 +15,6 @@ function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [summaries, setSummaries] = useState<{ [chatId: string]: string }>({});
   const [fileText, setFileText] = useState('');
-  const[searching, setSearch] = useState(false);
 
   useEffect(() => {
     const savedMessages = localStorage.getItem('messages');
@@ -34,8 +33,6 @@ function App() {
     if (savedSummaries) {
       setSummaries(JSON.parse(savedSummaries));
     }
-
-    setSearch(false);
 
     fetch("http://localhost:8000/api/chats/grouped")
       .then(res => res.json())
@@ -209,7 +206,6 @@ function App() {
     setCurrentChatId('0');
     setLastSavedMessageCount(0);
     setSelectedDropdownValue('');
-    setSearch(false);
 
     const res = await fetch("http://localhost:8000/api/chats/grouped");
     const data = await res.json();
@@ -302,9 +298,6 @@ function App() {
                   }
                 }}
               />
-              <div className={`extra-button ${searching ? 'black' : ''}`} onClick={()=>{
-                setSearch(!searching);
-                }}>Search</div>
             </div>
           </div>
         </div>
