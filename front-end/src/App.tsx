@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Message from './Message';
-//serper.dev API Key: 83ff61fc7181a5f7237b88e7efeb91bfb1d5620a
 
 function App() {
   const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'system' }[]>([]);
