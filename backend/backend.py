@@ -52,7 +52,7 @@ def get_access_token():
    access_token = response.json()["access_token"]
    return access_token
 
-def create_calendar_event(summary: str, description: str, date: str, startTime: str, endTime: str) -> bool:
+def create_calendar_event(summary: str, description: str, date: str, startTime: str, endTime: str) -> str:
    access_token = get_access_token()
    headers = {
        "Authorization": f"Bearer {access_token}",
