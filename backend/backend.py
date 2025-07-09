@@ -24,7 +24,6 @@ load_dotenv()
 app = FastAPI()
 
 llm = ChatGoogleGenerativeAI(model="models/gemini-2.0-flash")
-search_tool = DuckDuckGoSearchRun()
 
 CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -113,11 +112,6 @@ def create_calendar_event(summary: str, description: str, date: str, startTime: 
        print("❌ Failed to create event.")
        print(response.text)
        return "Whoopsy"
-
-@tool
-def web_search(query: str) -> str:
-   """Search the web using DuckDuckGo."""
-   return search_tool.run(query)
 
 def research_agent(state: dict) -> dict:
     query = state["input"]
