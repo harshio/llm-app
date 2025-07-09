@@ -152,7 +152,7 @@ def research_agent(state: dict) -> dict:
 def summary_agent(state: dict) -> dict:
    print("\n Summarizing research results...")
    prompt = PromptTemplate.from_template(
-       "Summarize the following research results:\n\n{research}."
+       "Summarize these search results:\n\n{research}. If the results are simple, the summary can simply be the results. Respond only with the direct summary."
    )
    chain = prompt | llm
    summary = chain.invoke({"research": state["research"]})
