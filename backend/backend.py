@@ -30,6 +30,12 @@ CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 REFRESH_TOKEN = os.getenv("GOOGLE_REFRESH_TOKEN")
 
+print("Client ID:", CLIENT_ID)
+print("Client Secret:", CLIENT_SECRET)
+print("Refresh Token:", REFRESH_TOKEN, "...")
+
+
+
 def get_access_token():
    token_url = "https://oauth2.googleapis.com/token"
    data = {
@@ -41,6 +47,7 @@ def get_access_token():
 
 
    response = requests.post(token_url, data=data)
+   print("Token refresh error:", response.text)
    response.raise_for_status()
    access_token = response.json()["access_token"]
    return access_token
@@ -93,19 +100,19 @@ def create_calendar_event(summary: str, description: str, date: str, startTime: 
             print("Start: ", existing_start)
             print("End: ", existing_end)
             if existing_end == end_datetime and existing_start == start_datetime:
-                print("Duplicate event found. Skipping creation.")
-                return False
+                print(existing)
+                return existing["summary"]
    else:
        print("Failed to check for duplicates. Proceeding with event creation.")
    url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
    response = requests.post(url, json=event, headers=headers)
    if response.status_code == 200 or response.status_code == 201:
        print("✅ Event created successfully!")
-       return True
+       return "There is no need"
    else:
        print("❌ Failed to create event.")
        print(response.text)
-       return False
+       return "Whoopsy"
 
 @tool
 def web_search(query: str) -> str:
@@ -195,10 +202,10 @@ Respond with only the JSON object. Do not include any explanation, notes, or Mar
         raise
     created = create_calendar_event(responses["summary"], responses["description"], responses["date"], responses["startTime"], responses["endTime"])
     #now the event should be scheduled.
-    if created:
+    if created == "There is no need":
         return {"solution": "The event has been scheduled. Check your Google Calendar for confirmation."}
     else:
-        return {"solution": "This event was already scheduled and will not be added again."}
+        return {"solution": f"The event, {created}, has unfortunately already been scheduled for this time slot."}
 
 def date_normalizer(state: dict) -> dict:
     today = datetime.now()
@@ -263,10 +270,10 @@ Respond with only the JSON object. Do not include any explanation, notes, or Mar
         raise
     created = create_calendar_event(responses["summary"], responses["description"], date, responses["startTime"], responses["endTime"])
     #now the event should be scheduled.
-    if created:
+    if created == "There is no need":
         return {"solution": "The event has been scheduled. Check your Google Calendar for confirmation."}
     else:
-        return  {"solution": "This event was already scheduled and will not be added again."}
+        return  {"solution": f"The event, {created}, has unfortunately already been scheduled for this time slot."}
 
 def calendar_planner(state: dict) -> dict:
     prompt = PromptTemplate.from_template("""
