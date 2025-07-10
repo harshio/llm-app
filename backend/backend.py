@@ -144,7 +144,8 @@ def do_search(query: str) -> dict:
 
     return {
         "research": result,
-        "sources": links
+        "sources": links,
+        "query": query
     }
 
 def research_agent(state: dict) -> dict:
@@ -187,10 +188,26 @@ Respond with the final rephrased query only.
 def summary_agent(state: dict) -> dict:
    print("\n Summarizing research results...")
    prompt = PromptTemplate.from_template(
-       "Summarize these search results:\n\n{research}. If the results are simple, the summary can simply be the results. Respond only with the direct summary."
+    """
+    Summarize the following search results:
+
+    {research}
+
+    Your summary should:
+    - Be as concise as possible.
+    - Include only factual content from the results.
+    - Answer the original query: "{query}" — nothing more, nothing less.
+
+    If the results are already a complete answer, return them as-is.
+    Do not speculate, rephrase unnecessarily, or add extra information.
+    """
    )
    chain = prompt | llm
-   summary = chain.invoke({"research": state["research"]})
+   print(state["query"])
+   summary = chain.invoke({
+       "research": state["research"],
+       "query": state["query"]
+    })
    sources = "\n".join(state["sources"])
    summary.content += f"\nHere are my sources: \n{sources}"
    print("\n Summary:\n", summary.content)
