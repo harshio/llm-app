@@ -18,6 +18,7 @@ from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.tools import tool
 import json
 import re
+import geocoder
 
 load_dotenv()
 
@@ -113,10 +114,7 @@ def create_calendar_event(summary: str, description: str, date: str, startTime: 
        print(response.text)
        return "Whoopsy"
 
-def research_agent(state: dict) -> dict:
-    query = state["input"]
-    print(f"\n🔍 Researching via Serper: {query}")
-
+def do_search(query: str) -> dict:
     try:
         response = requests.post(
             "https://google.serper.dev/search",
@@ -148,6 +146,43 @@ def research_agent(state: dict) -> dict:
         "research": result,
         "sources": links
     }
+
+def research_agent(state: dict) -> dict:
+    query = state["input"]
+    today = datetime.now()
+    today_str = today.strftime("%A, %B %d, %Y")
+    g = geocoder.ip('me')
+    curr_city = g.city
+    curr_state = g.state
+    curr_country = g.country
+    print(today_str)
+    print(curr_city)
+    print(curr_state)
+    print(curr_country)
+    prompt = PromptTemplate.from_template("""
+You are an agent in charge of performing effective online searches.
+
+Your task is to rephrase the following query: {query}
+
+Only modify it by adding the current city ({curr_city}), state ({curr_state}), country ({curr_country}), and today's date ({today_str}), *if and only if* doing so helps clarify or localize the intent of the query.
+
+Do not change the topic or intent of the original query. Do not invent a new query. Do not guess what the user might have meant.
+
+Just rewrite the query with relevant contextual details (like location/time), and nothing else.
+
+Respond with the final rephrased query only.
+""")
+    chain = prompt | llm
+    response = chain.invoke({
+        "query": state["input"],
+        "curr_city": curr_city,
+        "curr_state": curr_state,
+        "curr_country": curr_country,
+        "today_str": today_str
+    })
+    new_query = response.content
+    print("OVER HERE: " + new_query)
+    return do_search(new_query)
 
 def summary_agent(state: dict) -> dict:
    print("\n Summarizing research results...")
