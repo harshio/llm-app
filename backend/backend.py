@@ -341,6 +341,7 @@ You are a smart router agent. Given the user's question:
 
 
 Decide whether it can be answered directly ("INITIAL") or needs online research ("RESEARCH"), or if the user is asking to schedule something ("CALENDAR").
+If the input question involves current time, date, or location, or asks something dependent on those, you should choose research.
 Respond with one word: INITIAL or RESEARCH or CALENDAR.
 """)
 
