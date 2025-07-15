@@ -19,6 +19,7 @@ from langchain_core.tools import tool
 import json
 import re
 import geocoder
+import bleach
 
 load_dotenv()
 
@@ -213,6 +214,135 @@ def summary_agent(state: dict) -> dict:
    print("\n Summary:\n", summary.content)
    return {"summary": summary}
 
+def table_replacer(state: dict) -> dict:
+    checking = ""
+    if "answer" in state:
+        checking = state["answer"].content
+    elif "summary" in state:
+        checking = state["summary"].content
+    prompt = PromptTemplate.from_template("""
+You will be given a piece of text. If any parts of it look
+like they are structured as lists or data that belongs in
+rows/columns, convert these parts to HTML tables.
+Use only <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags.
+Do not use Markdown or tab characters. Do not explain your
+changes. 
+                                          
+Important:
+- Leave all other parts of the text exactly as they are.
+- If no part of the text should be turned into a table, return the original text unchanged.
+- Preserve surrounding narrative, context, or explanation text.
+
+Here are a few examples. Each one contains original text and a corrected version with
+valid HTML tables.
+
+----
+
+Example 1:
+Original:
+| Rank | Flavor | |------|------------| | 1 | Chocolate | | 2 | Vanilla | | 3 | Strawberry |
+
+Fixed:
+Top 3 flavors:
+<table>
+  <thead><tr><th>Rank</th><th>Flavor</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Chocolate</td></tr>
+    <tr><td>2</td><td>Vanilla</td></tr>
+    <tr><td>3</td><td>Strawberry</td></tr>
+  </tbody>
+</table>
+                                          
+----
+                                          
+Example 2:
+Original:
+Plan:
+- Monday: Gym
+- Tuesday: Work
+- Wednesday: Rest
+
+Fixed:
+<table>
+  <thead><tr><th>Day</th><th>Activity</th></tr></thead>
+  <tbody>
+    <tr><td>Monday</td><td>Gym</td></tr>
+    <tr><td>Tuesday</td><td>Work</td></tr>
+    <tr><td>Wednesday</td><td>Rest</td></tr>
+  </tbody>
+</table>
+
+----
+                                          
+Example 3:
+Original:
+Name    Score
+Alice   92
+Bob     88
+Carol   95
+
+Fixed:
+<table>
+  <thead><tr><th>Name</th><th>Score</th></tr></thead>
+  <tbody>
+    <tr><td>Alice</td><td>92</td></tr>
+    <tr><td>Bob</td><td>88</td></tr>
+    <tr><td>Carol</td><td>95</td></tr>
+  </tbody>
+</table>
+                                          
+----
+                                          
+Example 4:
+Original:
+The invention of ice cream is often credited to ancient China, where early versions were made using snow, milk, and rice. Over time, variations spread to Persia, Italy, and eventually became popular worldwide.
+
+Fixed:
+The invention of ice cream is often credited to ancient China, where early versions were made using snow, milk, and rice. Over time, variations spread to Persia, Italy, and eventually became popular worldwide.
+
+----
+                                         
+Example 5:
+Original:
+Here are some fun facts about ice cream. The average American eats about 20 pounds of ice cream each year. Below is a breakdown of consumption by age group:
+
+Age Group    Pounds per Year
+Children     25
+Teens        22
+Adults       18
+Seniors      15
+
+Ice cream sales tend to spike in July, which is recognized as National Ice Cream Month.
+
+Fixed:
+Here are some fun facts about ice cream. The average American eats about 20 pounds of ice cream each year. Below is a breakdown of consumption by age group:
+
+<table>
+  <thead><tr><th>Age Group</th><th>Pounds per Year</th></tr></thead>
+  <tbody>
+    <tr><td>Children</td><td>25</td></tr>
+    <tr><td>Teens</td><td>22</td></tr>
+    <tr><td>Adults</td><td>18</td></tr>
+    <tr><td>Seniors</td><td>15</td></tr>
+  </tbody>
+</table>
+
+Ice cream sales tend to spike in July, which is recognized as National Ice Cream Month.
+
+----
+                                          
+
+Return the full modified text. 
+Text:
+{text}                                      
+""")
+    chain = prompt | llm
+    response = chain.invoke({"text": checking})
+    html_response = response.content
+    clean_html = bleach.clean(html_response, tags=["table", "thead", "tbody", "tr", "th", "td", "p", "br"], strip=True)
+    print(clean_html)
+    return {"table_replaced": clean_html}
+
 def initial_planner(state: dict) -> dict:
     prompt = PromptTemplate.from_template("""
 You are a scheduling agent.
@@ -405,6 +535,7 @@ def initial_agent(state: dict) -> dict:
 
 
 builder = StateGraph(dict)
+builder.add_node("TableReplacer", table_replacer)
 builder.add_node("Router", router_agent)
 builder.add_node("Initial", initial_agent)
 builder.add_node("Research", research_agent)
@@ -423,11 +554,12 @@ builder.add_conditional_edges("Calendar", lambda state: state["next"], {
     "PLANNER": "InitialPlanner",
     "DATE": "DateNormalizer"
 })
-builder.add_edge("Initial", END)
+builder.add_edge("Initial", "TableReplacer")
 builder.add_edge("Research", "Summary")
-builder.add_edge("Summary", END)
+builder.add_edge("Summary", "TableReplacer")
 builder.add_edge("DateNormalizer", "Planner")
 builder.add_edge("InitialPlanner", END)
+builder.add_edge("TableReplacer", END)
 builder.add_edge("Planner", END)
 workflow = builder.compile()
 
@@ -495,12 +627,10 @@ async def generate_content(request: Request):
     result = workflow.invoke({"input": user_input,
                               "messages": messages
                               })
-    if "answer" in result:
-            content = result["answer"].content
-    elif "summary" in result:
-            content = result["summary"].content
+    if "table_replaced" in result:
+        content = result["table_replaced"]
     elif "solution" in result:
-            content = result["solution"]
+        content = result["solution"]
     else:
         content = "Sorry, I couldn't generate a response."
     return {"response": content}
