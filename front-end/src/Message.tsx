@@ -9,7 +9,10 @@ interface MessageProps {
 const Message: React.FC<MessageProps> = ({ text, sender }) => {
     const bubbleClass = sender === 'user' ? 'chat-message user' : 'chat-message system';
   
-    return <div className={bubbleClass}>{text}</div>;
+    return <div 
+              className={bubbleClass}
+              dangerouslySetInnerHTML={{ __html: text }}
+            />;
 };
 
 export default Message;
