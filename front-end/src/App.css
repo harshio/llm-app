@@ -15,6 +15,26 @@ body {
   overflow-y: auto;
 }
 
+.chat-message table {
+  border-collapse: collapse;
+  margin-top: 8px;
+  width: 100%;
+  font-size: 14px;
+}
+
+.chat-message th,
+.chat-message td {
+  border: 1px solid #333;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.chat-message th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+
 .layout .App.no-sidebar {
   margin-left: 0; /* no shift when sidebar is hidden */
 }
