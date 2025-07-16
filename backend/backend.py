@@ -408,7 +408,7 @@ Do not include any explanation, punctuation, or extra text — just return the d
             "today_date": today_str,
             "question": state["input"]
         }
-    ) #will theoretically return something like 2025-07-04
+    ) #will theoretically return something like 2025-0-04
     #and store it in response
     return {"response": response, "question": state["input"]}
 
@@ -487,9 +487,9 @@ You are a smart router agent. Given the user's question:
 "{question}"
 
 
-Decide whether it can be answered directly ("INITIAL") or needs online research ("RESEARCH"), or if the user is asking to schedule something ("CALENDAR").
+Decide whether it can be answered directly ("INITIAL") or needs online research ("RESEARCH"), or if the user is asking to schedule something ("CALENDAR"), or if the user is asking a coding-related question that doesn't require up-to-date information ("CODING").
 If the input question involves current time, date, or location, or asks something dependent on those, you should choose research.
-Respond with one word: INITIAL or RESEARCH or CALENDAR.
+Respond with one word: INITIAL or RESEARCH or CALENDAR or CODING.
 """)
 
 
@@ -508,7 +508,68 @@ Respond with one word: INITIAL or RESEARCH or CALENDAR.
    return new_state
 
 
+def coding_agent(state: dict) -> dict:
+    prompt = PromptTemplate.from_template(
+        "Answer this question: '{question}'."
+    )
+    chain = prompt | llm
+    answer = chain.invoke({
+        "question": state["input"]
+    })
+    return {"answer": answer}
 
+def code_formatter(state: dict) -> dict:
+    gemini_output = state["answer"].content
+    prompt = PromptTemplate.from_template(
+   """
+You are an agent whose only job is to convert code written in Markdown format
+into properly formatted HTML. You will receive a full string, and some, all, or none
+of it may be in Markdown code blocks (triple backticks).
+
+⚠️ Important Rules:
+- DO NOT add or explain anything.
+- DO NOT modify content that is not part of a Markdown code block.
+- ONLY replace Markdown code blocks (```lang ... ```) with corresponding <pre><code class="language-lang">...</code></pre>.
+- If the original string contains no Markdown code, return it unchanged.
+
+Examples:
+
+---
+Original String:
+```python def add(x, y): return x + y ```
+
+Fixed String:
+<pre><code class="language-python">
+def add(x, y): return x + y
+</code></pre>
+---
+Original String:
+```python def add(x, y): return x + y ```
+This part of the code defines a function that returns the sum of two numbers.
+
+Fixed String:
+<pre><code class="language-python">
+def add(x, y): return x + y
+</code></pre>
+This part of the code defines a function that returns the sum of two numbers.
+---
+Original String:
+The quick brown fox jumped over the lazy dog.
+
+Fixed String:
+The quick brown fox jumped over the lazy dog.
+---
+Here is your original string: {output}
+Please return only the fixed string. Do not add any explanations or comments.
+"""
+    )
+    chain = prompt | llm
+    answer = chain.invoke({
+        "output": gemini_output
+    })
+    html_response = answer.content
+    clean_html = bleach.clean(html_response, tags=["pre", "code", "p", "br"], strip=True)
+    return {"coding": clean_html}
 
 def initial_agent(state: dict) -> dict:
     print("\n💡 Initial answer agent responding...")
@@ -536,6 +597,8 @@ def initial_agent(state: dict) -> dict:
 
 builder = StateGraph(dict)
 builder.add_node("TableReplacer", table_replacer)
+builder.add_node("Coder", coding_agent)
+builder.add_node("CodeFormatter", code_formatter)
 builder.add_node("Router", router_agent)
 builder.add_node("Initial", initial_agent)
 builder.add_node("Research", research_agent)
@@ -548,7 +611,8 @@ builder.set_entry_point("Router")
 builder.add_conditional_edges("Router", lambda state: state["next"], {
    "INITIAL": "Initial",
    "RESEARCH": "Research",
-   "CALENDAR": "Calendar"
+   "CALENDAR": "Calendar",
+   "CODING": "Coder"
 })
 builder.add_conditional_edges("Calendar", lambda state: state["next"], {
     "PLANNER": "InitialPlanner",
@@ -558,9 +622,11 @@ builder.add_edge("Initial", "TableReplacer")
 builder.add_edge("Research", "Summary")
 builder.add_edge("Summary", "TableReplacer")
 builder.add_edge("DateNormalizer", "Planner")
+builder.add_edge("Coder", "CodeFormatter")
 builder.add_edge("InitialPlanner", END)
 builder.add_edge("TableReplacer", END)
 builder.add_edge("Planner", END)
+builder.add_edge("CodeFormatter", END)
 workflow = builder.compile()
 
 
@@ -631,6 +697,8 @@ async def generate_content(request: Request):
         content = result["table_replaced"]
     elif "solution" in result:
         content = result["solution"]
+    elif "coding" in result:
+        content = result["coding"]
     else:
         content = "Sorry, I couldn't generate a response."
     return {"response": content}
