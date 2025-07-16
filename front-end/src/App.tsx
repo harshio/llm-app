@@ -244,9 +244,9 @@ function App() {
 
       <div className={`App ${messages.length === 0 ? 'centered-input' : 'bottom-input'}`}>
         {messages.length === 0 && <div className="welcomeMsg">How may I help you today?</div>}
-        <div className="message-list">
+        <div className={`message-list ${sidebarOpen ? 'with-sidebar': 'no-sidebar'}`}>
           {messages.map((msg, index) => (
-            <Message key={index} text={msg.text} sender={msg.sender} />
+            <Message key={index} text={msg.text} sender={msg.sender} pushed={sidebarOpen}/>
           ))}
           <div ref={messagesEndRef} />
         </div>
