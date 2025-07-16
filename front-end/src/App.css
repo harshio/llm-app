@@ -135,7 +135,7 @@ body {
 .welcomeMsg {
   position: absolute;
   top: 40%; /* slightly above the center of screen */
-  left: 45%;
+  left: 62%;
   transform: translate(-85%, -50%);
   font-family: 'Arial';
   font-size: 18px;
@@ -152,8 +152,8 @@ body {
 
 .chat-input-container {
   position: absolute;
-  left: 0;
-  right: 60px;
+  left: 150px;
+  right: 0px;
   padding-right: 150px;
   padding-top: 15px;
   display: flex;
@@ -312,33 +312,30 @@ body {
   font-family: 'Arial';
 }
 
-.chat-message.system.right{
+.chat-message.system {
   color: #000000;
   background-color: #FFA500;
   padding: 10px 15px;
-  margin: 5px 10px;
   border-radius: 18px;
   max-width: 30%;
   word-wrap: break-word;
-  align-self: flex-start;
   font-size: 16px;
   text-align: left;
   font-family: 'Arial';
+  align-self: flex-start;
+  transition: margin 0.4s ease, transform 0.4s ease, align-self 0.4s ease;
+}
+
+.chat-message.system.right{
+  margin-right: 15px;
 }
 
 .chat-message.system.left{
-  color: #000000;
-  background-color: #FFA500;
-  padding: 10px 15px;
-  margin: 5px -70px;
-  border-radius: 18px;
-  max-width: 30%;
-  word-wrap: break-word;
-  align-self: flex-end;
-  margin-right: 900px;
-  font-size: 16px;
-  text-align: left;
-  font-family: 'Arial';
+  margin-left: 15px;
+}
+
+.chat-message{
+  transition: margin 0.4s ease, transform 0.4s ease;
 }
 
 .App-header {
