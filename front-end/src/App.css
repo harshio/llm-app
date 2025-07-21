@@ -133,15 +133,12 @@ body {
 }
 
 .welcomeMsg {
-  position: absolute;
-  top: 40%; /* slightly above the center of screen */
-  left: 62%;
-  transform: translate(-85%, -50%);
+  position: relative;
+  margin: 0 auto;
   font-family: 'Arial';
   font-size: 18px;
   color: #666;
   background-color: #fff;
-  padding: 8px 16px;
   border-radius: 6px;
   text-align: center;
 }
@@ -150,26 +147,21 @@ body {
   color: #0056b3;
 }
 
-.chat-input-container {
-  position: absolute;
-  left: 150px;
-  right: 0px;
-  padding-right: 150px;
-  padding-top: 15px;
-  display: flex;
-  justify-content: center;
-  transition: top 0.4s ease;
+.chat-input-container.centered {
+  margin-top: -15vh;
 }
 
-.chat-input-container.centered {
-  top: 43%;
-  transform: translatY(-50%);
+.chat-input-container {
+  position: relative;
+  margin: 0 auto;
+  margin-bottom: 100px;
+  display: flex;
+  justify-content: center;
+  transition: margin 0.4s ease;
 }
 
 .chat-input-container.bottom {
-  top: 92%;
-  transform: translateY(-50%);
-  padding-top: 30px;
+  margin-top: 50vh;
 }
 
 .chat-input-wrapper {
@@ -240,23 +232,16 @@ body {
 
 .title{
   background-color: #FFFFFF;
-  font-weight: bold;
   color: #000000;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  width: 40%;
-  margin: 0 auto;
-  border-left: 2px solid #000000;
-  border-right: 2px solid #000000;
-  border-bottom: 2px solid #000000;
-  border-top: none;
-  border-radius: 5px;
+  padding-left: 10px;
+  width: 100%;
   font-family: 'Arial';
   display: flex;
   align-items: center;     /* vertical centering */
-  justify-content: center; /* horizontal centering */
-  text-align: center;
-  height: 40px;
+  justify-content: flex-start; /* horizontal alignment is to left */
+  text-align: left;
+  font-size: 18px;
+  height: 80px;
 }
 
 .newChat{
@@ -353,15 +338,24 @@ body {
   color: #61dafb;
 }
 
+.layout{
+  padding-left: 200px;
+  padding-top: 60px;
+  position: relative;
+}
+
 .header-container {
-  position: absolute;
+  position: fixed; /* changed from relative */
   top: 0;
-  left: 0;
-  right: 0;
+  left: 200px;
+  width: 100%;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  z-index: 100;
+  align-items: flex-start;
+  border-bottom: 2px solid rgba(128, 128, 128, 0.4);
+  height: 60px;
+  background-color: white;
 }
 
 .sidebar {
