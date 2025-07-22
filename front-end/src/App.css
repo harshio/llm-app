@@ -78,21 +78,6 @@ body {
 }
 
 
-/* Input starts centered */
-.chat-input-bar.centered {
-  top: 50%;
-  transform: translate(-80%, -50%);
-}
-
-
-
-/* Input sticks to bottom after messages */
-.chat-input-bar.bottom {
-  top: 92%;
-  transform: translate(-80%, -50%);
-}
-
-
 .top-right {
   position: absolute;
   top: 10px;
