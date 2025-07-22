@@ -147,10 +147,6 @@ body {
   color: #0056b3;
 }
 
-.chat-input-container.centered {
-  margin-top: -15vh;
-}
-
 .chat-input-container {
   position: relative;
   margin: 0 auto;
@@ -158,10 +154,6 @@ body {
   display: flex;
   justify-content: center;
   transition: margin 0.4s ease;
-}
-
-.chat-input-container.bottom {
-  margin-top: 50vh;
 }
 
 .chat-input-wrapper {
@@ -344,6 +336,10 @@ body {
   position: relative;
 }
 
+.layout.lefty{
+  padding-left: 0;
+}
+
 .header-container {
   position: fixed; /* changed from relative */
   top: 0;
@@ -356,6 +352,14 @@ body {
   border-bottom: 2px solid rgba(128, 128, 128, 0.4);
   height: 60px;
   background-color: white;
+}
+
+.header-container.tighty {
+  left: 0;
+}
+
+.title.loosy {
+  margin-left: 50px;
 }
 
 .sidebar {
@@ -384,7 +388,7 @@ body {
 
 .hamburger {
   position: fixed;
-  top: 16px;
+  top: 7px;
   left: 16px;
   font-size: 24px;
   background: none;

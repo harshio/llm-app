@@ -213,9 +213,9 @@ function App() {
   };
 
   return (
-    <div className="layout">
-      <div className="header-container">
-        <div className="title">Studio Gem LLM</div>
+    <div className={`layout ${sidebarOpen ? '': 'lefty'}`}>
+      <div className={`header-container ${sidebarOpen ? '': 'tighty'}`}>
+        <div className={`title ${sidebarOpen ? '': 'loosy'}`}>Studio Gem LLM</div>
       </div>
 
       <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -250,7 +250,7 @@ function App() {
           ))}
           <div ref={messagesEndRef} />
         </div>
-        <div className={`chat-input-container ${messages.length === 0 ? 'centered' : 'bottom'}`}>
+        <div className={`chat-input-container`}>
           <div className="chat-input-wrapper">
             <div className="chat-input-bar">
               <textarea
