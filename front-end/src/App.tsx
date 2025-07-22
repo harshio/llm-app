@@ -223,7 +223,7 @@ function App() {
       </button>
 
       <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-        <button className="newChat" onClick={handleNew}>New Chat</button>
+        <div className="newChat" onClick={handleNew}><i className="bi bi-pencil-square"></i>  New Chat</div>
         <div className="sidebar-title">Chats</div>
         {chatIds.map(chatId => (
           <div

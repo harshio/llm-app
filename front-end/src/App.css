@@ -188,15 +188,12 @@
 }
 
 .newChat{
-  width: fit-content;        /* only as wide as content */
+  width: 150px;        /* only as wide as content */
   margin: 10px auto; 
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  border-bottom: 2px solid #000000;
   font-family: 'Arial';
   color: #000000;
   background-color: #f5f5f5;
+  text-align: left;
 }
 
 .custom-dropdown{
@@ -305,12 +302,15 @@
   bottom: 0;
   width: 200px;
   background-color: #f5f5f5;
-  border-right: 1px solid #ddd;
+  border-right: 1px solid #ccc;
   padding: 1rem;
   overflow-y: auto;
   z-index: 10;
   padding-top: 60px;
   transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .sidebar.closed {
@@ -334,8 +334,9 @@
 }
 
 .sidebar-title {
-  font-weight: bold;
+  font-weight: lighter;
   margin-bottom: 1rem;
+  width: 150px;
 }
 
 .sidebar-chat {
