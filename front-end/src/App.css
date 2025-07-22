@@ -198,6 +198,9 @@
 
 .newChat:hover{
   cursor: pointer;
+  background-color: lightblue;
+  padding: 5px;
+  border-radius: 5px;
 }
 
 .custom-dropdown{
