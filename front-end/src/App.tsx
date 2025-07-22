@@ -242,7 +242,7 @@ function App() {
         ))}
       </div>
 
-      <div className={`App ${messages.length === 0 ? 'centered-input' : 'bottom-input'}`}>
+      <div className={`App ${messages.length === 0 ? 'centered-input' : 'bottom-input'} ${sidebarOpen ? '': 'no-sidebar'}`}>
         {messages.length === 0 && <div className="welcomeMsg">How may I help you today?</div>}
         <div className={`message-list ${sidebarOpen ? 'with-sidebar': 'no-sidebar'}`}>
           {messages.map((msg, index) => (
@@ -250,8 +250,6 @@ function App() {
           ))}
           <div ref={messagesEndRef} />
         </div>
-        <div className={`chat-input-container`}>
-          <div className="chat-input-wrapper">
             <div className="chat-input-bar">
               <textarea
                 value={inputText}
@@ -260,46 +258,44 @@ function App() {
                 }}
                 placeholder="What is the weather?"
               ></textarea>
-              <button type="submit" className="btn btn-primary" onClick={handleSend}>
-                <i className="bi bi-send"></i>
-              </button>
-            </div>
-            <div className="button-row">
-              <label htmlFor="hidden-file-upload" className="upload-plus">
-                +
-              </label>
-              <input
-                id="hidden-file-upload"
-                type="file"
-                accept=".txt,.csv,.json"
-                style={{ display: 'none' }}
-                onChange={async (e) => {
-                  if (e.target.files?.[0]) {
-                    const formData = new FormData();
-                    formData.append("file", e.target.files[0]);
+              <div className="button-row">
+                <label htmlFor="hidden-file-upload" className="upload-plus">
+                  +
+                </label>
+                <input
+                  id="hidden-file-upload"
+                  type="file"
+                  accept=".txt,.csv,.json"
+                  style={{ display: 'none' }}
+                  onChange={async (e) => {
+                    if (e.target.files?.[0]) {
+                      const formData = new FormData();
+                      formData.append("file", e.target.files[0]);
 
-                    try {
-                      const res = await fetch("http://localhost:8000/api/upload", {
-                        method: "POST",
-                        body: formData
-                      });
+                      try {
+                        const res = await fetch("http://localhost:8000/api/upload", {
+                          method: "POST",
+                          body: formData
+                        });
 
-                      const data = await res.json();
-                      if (data.text) {
-                        setFileText(data.text);
-                      } else {
-                        alert("No text extracted.");
+                        const data = await res.json();
+                        if (data.text) {
+                          setFileText(data.text);
+                        } else {
+                          alert("No text extracted.");
+                        }
+                      } catch (err) {
+                        console.error("Upload failed", err);
+                        alert("Upload failed");
                       }
-                    } catch (err) {
-                      console.error("Upload failed", err);
-                      alert("Upload failed");
                     }
-                  }
-                }}
-              />
+                  }}
+                />
+                <button type="submit" className="btn btn-primary" onClick={handleSend}>
+                  <i className="bi bi-arrow-down-circle-fill"></i>
+                </button>
             </div>
-          </div>
-        </div>
+            </div>
       </div>
     </div>
   );

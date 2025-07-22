@@ -1,17 +1,33 @@
 .App {
   display: flex;
   flex-direction: column;
-  height: 100vh;
   overflow-y: auto;
-  position: relative;
+  position: absolute;
+  top: 60px;
+  left: 200px;
+  bottom: 0;
+  right: 0;
   transition: margin-left 0.3s ease;
+  align-items: center;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  height: 100vh;
-  overflow-y: auto;
+.message-list {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  padding-bottom: 0px;
+}
+
+.welcomeMsg {
+  font-family: 'Arial';
+  font-size: 18px;
+  color: #666;
+  background-color: #fff;
+  text-align: center;
+}
+
+.App.no-sidebar {
+  left: 0px;
 }
 
 .chat-message table {
@@ -52,8 +68,7 @@ body {
 }
 
 .message-list.with-sidebar {
-  width: calc(100% - 200px);
-  margin-left: 200px;
+  width: 100%;
 }
 .message-list.no-sidebar {
   width: 100%;
@@ -87,11 +102,18 @@ body {
 
 
 .chat-input-bar textarea {
-  flex: 1;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  width: 300px;
   resize: none;
   padding: 10px;
   font-family: 'Arial';
-  margin-right: 8px;
+}
+
+.chat-input-bar textarea:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 .chat-input-bar textarea::placeholder {
@@ -101,63 +123,19 @@ body {
   color: #999;
 }
 
-.chat-input-bar button {
-  flex-shrink: 0;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 71px;
-}
-
-.message-list {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  padding-bottom: 110px;
-}
-
-.welcomeMsg {
-  position: relative;
-  margin: 0 auto;
-  font-family: 'Arial';
-  font-size: 18px;
-  color: #666;
-  background-color: #fff;
-  border-radius: 6px;
-  text-align: center;
-}
-
 .upload-plus:hover {
   color: #0056b3;
 }
 
-.chat-input-container {
-  position: relative;
-  margin: 0 auto;
-  margin-bottom: 100px;
-  display: flex;
-  justify-content: center;
-  transition: margin 0.4s ease;
-}
-
-.chat-input-wrapper {
-  display: flex;
-  margin: 0 auto;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
 .chat-input-bar {
   position: relative; /* default */
+  width: 300px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  border: 2px solid #ccc;
-  border-radius: 8px;
+  border: none;
   background-color: white;
-  padding: 10px;
-  width: fit-content;
-  margin: 0 auto; /* horizontally center */
+  gap: 0;
 }
 
 
@@ -176,29 +154,17 @@ body {
   padding-right: 1px;
 }
 
-.extra-button {
-  color: #007bff;
-  padding: 5px;
-  padding-left: 10px;
-  padding-right: 12px;
-  padding-top: 7px;
-  padding-bottom: 8px;
-  margin-top: 1px;
-}
-
-.extra-button:hover {
-  cursor: pointer;
-  color: #0056b3;
-}
-
-.extra-button.black {
-  color: black;
-}
-
 .button-row {
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 20px 20px;
+  width: 300px;
+  padding: 10px;
+  background-color: #ffffff;
   display: flex;
   flex-direction: row;
-  gap: 10px; /* space between + and Search */
+  align-items: center;
+  justify-content: space-between;
 }
 
 .upload-plus, .extra-button {
@@ -285,41 +251,26 @@ body {
   text-align: left;
   font-family: 'Arial';
   align-self: flex-start;
-  transition: margin 0.4s ease, transform 0.4s ease, align-self 0.4s ease;
 }
 
-.chat-message.system.right{
-  margin-right: 15px;
-}
-
-.chat-message.system.left{
-  margin-left: 15px;
-}
-
-.chat-message{
+.chat-message.user {
   transition: margin 0.4s ease, transform 0.4s ease;
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
 .App-link {
   color: #61dafb;
 }
 
-.layout{
+.layout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   padding-left: 200px;
   padding-top: 60px;
-  position: relative;
 }
+
 
 .layout.lefty{
   padding-left: 0;
@@ -334,7 +285,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  border-bottom: 2px solid rgba(128, 128, 128, 0.4);
+  border-bottom: 1px solid #ccc;
   height: 60px;
   background-color: white;
 }
