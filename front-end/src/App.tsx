@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Message from './Message';
+import { CSSTransition } from 'react-transition-group';
+
 
 function App() {
   const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'system' }[]>([]);
@@ -242,9 +244,9 @@ function App() {
         ))}
       </div>
 
-      <div className={`App ${messages.length === 0 ? 'centered-input' : 'bottom-input'} ${sidebarOpen ? '': 'no-sidebar'}`}>
+      <div className={`App ${sidebarOpen ? '': 'no-sidebar'}`}>
         {messages.length === 0 && <div className="welcomeMsg">How may I help you today?</div>}
-        <div className={`message-list ${sidebarOpen ? 'with-sidebar': 'no-sidebar'}`}>
+        <div className={`message-list ${sidebarOpen ? 'with-sidebar': 'no-sidebar'} ${messages.length === 0 ? 'centered-input' : 'bottom-input'}`}>
           {messages.map((msg, index) => (
             <Message key={index} text={msg.text} sender={msg.sender} pushed={sidebarOpen}/>
           ))}
