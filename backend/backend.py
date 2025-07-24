@@ -153,6 +153,7 @@ def research_agent(state: dict) -> dict:
     query = state["input"]
     today = datetime.now()
     today_str = today.strftime("%A, %B %d, %Y")
+    time_str = today.strftime("%I:%M %p")
     g = geocoder.ip('me')
     curr_city = g.city
     curr_state = g.state
@@ -161,12 +162,13 @@ def research_agent(state: dict) -> dict:
     print(curr_city)
     print(curr_state)
     print(curr_country)
+    print(time_str)
     prompt = PromptTemplate.from_template("""
 You are an agent in charge of performing effective online searches.
 
 Your task is to rephrase the following query: {query}
 
-Only modify it by adding the current city ({curr_city}), state ({curr_state}), country ({curr_country}), and today's date ({today_str}), *if and only if* doing so helps clarify or localize the intent of the query.
+Only modify it by adding the current city ({curr_city}), state ({curr_state}), country ({curr_country}), and today's date ({today_str}), and today's time ({time_str}) *if and only if* doing so helps clarify or localize the intent of the query.
 
 Do not change the topic or intent of the original query. Do not invent a new query. Do not guess what the user might have meant.
 
@@ -180,7 +182,8 @@ Respond with the final rephrased query only.
         "curr_city": curr_city,
         "curr_state": curr_state,
         "curr_country": curr_country,
-        "today_str": today_str
+        "today_str": today_str,
+        "time_str": time_str
     })
     new_query = response.content
     print("OVER HERE: " + new_query)
